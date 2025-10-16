@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commander Kite - Application de Gestion Pédagogique</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-light: #5dade2;
+            --primary-dark: #2980b9;
+            --secondary: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #f5f7fa;
+            --dark: #2c3e50;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 4px 15px rgba(0, 0, 0, 0.15);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.5;
+            min-height: 100vh;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        
+        .container {
+            max-width: 100%;
+            width: 100%;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .btn-retour {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            text-decoration: none;
+        }
+        
+        .btn-retour:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        header {
+            background: white;
+            color: var(--dark);
+            padding: 20px 15px;
+            text-align: center;
+            border-radius: var(--radius);
+            margin-bottom: 15px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+        }
+        
+        .header-icon {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        
+        header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+            color: var(--secondary);
+            font-weight: 700;
+        }
+        
+        header p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .price-tag {
+            background: linear-gradient(135deg, var(--success), #27ae60);
+            color: white;
+            padding: 12px;
+            border-radius: var(--radius);
+            margin: 15px auto;
+            text-align: center;
+            box-shadow: var(--shadow);
+            max-width: 280px;
+        }
+        
+        .price-tag .amount {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .price-tag .duration {
+            font-size: 0.85rem;
+            opacity: 0.95;
+        }
+        
+        .order-form {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px 15px;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .section-title {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .section-title i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+        
+        label i {
+            color: var(--primary);
+            width: 16px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .required::after {
+            content: " *";
+            color: var(--danger);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid #e8f4fc;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            outline: none;
+        }
+        
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(52, 152, 219, 0.05);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-top: 2px;
+        }
+        
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: 500;
+            font-size: 0.85rem;
+            line-height: 1.3;
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, var(--success), #27ae60);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            width: 100%;
+            justify-content: center;
+            margin-top: 20px;
+            height: 44px;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .features-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--radius);
+            margin: 20px 0;
+            border: 1px solid rgba(52, 152, 219, 0.1);
+        }
+        
+        .features-list h3 {
+            color: var(--secondary);
+            margin-bottom: 12px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: var(--shadow);
+        }
+        
+        .feature-item i {
+            color: var(--success);
+            font-size: 0.9rem;
+            background: rgba(46, 204, 113, 0.1);
+            padding: 6px;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .feature-item span {
+            font-size: 0.85rem;
+            line-height: 1.2;
+        }
+        
+        .whatsapp-info {
+            background: #25D366;
+            color: white;
+            padding: 15px;
+            border-radius: var(--radius);
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .whatsapp-info i {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .whatsapp-info p {
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .whatsapp-info strong {
+            font-size: 1rem;
+        }
+
+        /* === RESPONSIVE DESIGN === */
+        
+        /* Petits écrans mobiles (≤ 360px) */
+        @media (max-width: 360px) {
+            body {
+                padding: 8px;
+            }
+            
+            header {
+                padding: 15px 10px;
+            }
+            
+            .header-icon {
+                font-size: 1.8rem;
+            }
+            
+            header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .price-tag .amount {
+                font-size: 1.5rem;
+            }
+            
+            .order-form {
+                padding: 15px 10px;
+            }
+            
+            .btn-submit {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+                height: 40px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
+        /* Mobiles moyens (361px - 480px) */
+        @media (min-width: 361px) and (max-width: 480px) {
+            .container {
+                max-width: 400px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Grands mobiles (481px - 767px) */
+        @media (min-width: 481px) and (max-width: 767px) {
+            .container {
+                max-width: 450px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            header {
+                padding: 25px 20px;
+            }
+            
+            .order-form {
+                padding: 25px 20px;
+            }
+        }
+        
+        /* Tablettes (768px - 1024px) */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .container {
+                max-width: 600px;
+            }
+            
+            body {
+                padding: 20px;
+                align-items: center;
+            }
+            
+            header {
+                padding: 30px 25px;
+            }
+            
+            .header-icon {
+                font-size: 2.5rem;
+            }
+            
+            header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .order-form {
+                padding: 30px 25px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            
+            .btn-submit {
+                padding: 14px 24px;
+                font-size: 1rem;
+                height: 48px;
+            }
+            
+            .btn-retour {
+                padding: 12px 18px;
+                font-size: 14px;
+            }
+        }
+        
+        /* Grands écrans (> 1024px) */
+        @media (min-width: 1025px) {
+            .container {
+                max-width: 500px;
+            }
+            
+            body {
+                align-items: center;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+        }
+        
+        /* Orientation paysage */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                align-items: flex-start;
+                padding: 8px;
+            }
+            
+            .container {
+                max-width: 100%;
+            }
+            
+            header {
+                padding: 15px;
+            }
+            
+            .order-form {
+                padding: 15px;
+            }
+            
+            .form-group {
+                margin-bottom: 12px;
+            }
+        }
+        
+        /* Hauteur d'écran réduite */
+        @media (max-height: 600px) {
+            .price-tag {
+                margin: 10px auto;
+                padding: 10px;
+            }
+            
+            .features-list {
+                margin: 15px 0;
+                padding: 12px;
+            }
+        }
+        
+        /* Support tactile amélioré */
+        @media (hover: none) and (pointer: coarse) {
+            .btn-retour:hover,
+            .btn-submit:hover {
+                transform: none;
+            }
+            
+            input, select, textarea {
+                font-size: 16px; /* Empêche le zoom sur iOS */
+            }
+        }
+        
+        /* Mode sombre automatique */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --light: #2c3e50;
+                --dark: #f5f7fa;
+            }
+            
+            .order-form, header {
+                background: #34495e;
+                color: #ecf0f1;
+            }
+            
+            input, select, textarea {
+                background: #2c3e50;
+                color: #ecf0f1;
+                border-color: #4a6572;
+            }
+            
+            .features-list {
+                background: #2c3e50;
+            }
+            
+            .feature-item {
+                background: #34495e;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="javascript:history.back()" class="btn-retour">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        
+        <header>
+            <div class="header-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h1>Commander Kite</h1>
+            <p>Application de gestion pédagogique</p>
+            
+            <div class="price-tag">
+                <span class="amount">10.000 FCFA</span>
+                <span class="duration">12 mois - Renouvelable</span>
+            </div>
+        </header>
+        
+        <div class="order-form">
+            <h2 class="section-title">
+                <i class="fas fa-user"></i>
+                Informations personnelles
+            </h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstname" class="required">
+                        <i class="fas fa-user"></i>
+                        Prénom
+                    </label>
+                    <input type="text" id="firstname" name="firstname" required placeholder="Votre prénom">
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastname" class="required">
+                        <i class="fas fa-user-tag"></i>
+                        Nom
+                    </label>
+                    <input type="text" id="lastname" name="lastname" required placeholder="Votre nom">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email" class="required">
+                    <i class="fas fa-envelope"></i>
+                    Email
+                </label>
+                <input type="email" id="email" name="email" required placeholder="votre@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="phone" class="required">
+                    <i class="fas fa-phone"></i>
+                    Téléphone
+                </label>
+                <input type="tel" id="phone" name="phone" required placeholder="+228 90 12 34 56" value="+228">
+            </div>
+            
+            <div class="form-group">
+                <label for="school" class="required">
+                    <i class="fas fa-school"></i>
+                    Établissement
+                </label>
+                <input type="text" id="school" name="school" required placeholder="Nom de l'établissement">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="subject">
+                        <i class="fas fa-book"></i>
+                        Matière(s)
+                    </label>
+                    <input type="text" id="subject" name="subject" placeholder="Ex: Mathématiques">
+                </div>
+                
+                <div class="form-group">
+                    <label for="level">
+                        <i class="fas fa-users"></i>
+                        Niveau
+                    </label>
+                    <select id="level" name="level">
+                        <option value="">Sélectionnez</option>
+                        <option value="primaire">Primaire</option>
+                        <option value="college">Collège</option>
+                        <option value="lycee">Lycée</option>
+                        <option value="superieur">Supérieur</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">
+                    <i class="fas fa-comment"></i>
+                    Message
+                </label>
+                <textarea id="message" name="message" placeholder="Questions ou informations supplémentaires..."></textarea>
+            </div>
+            
+            <div class="features-list">
+                <h3>
+                    <i class="fas fa-check-circle"></i>
+                    Fonctionnalités incluses
+                </h3>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Accès complet</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Fiches illimitées</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Tous types de questions</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Export PDF</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Support technique</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check"></i>
+                        <span>Mises à jour</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms" class="required">
+                    J'accepte les conditions générales (12 mois renouvelables)
+                </label>
+            </div>
+            
+            <button class="btn-submit" onclick="sendToWhatsApp()">
+                <i class="fab fa-whatsapp"></i>
+                Commander via WhatsApp
+            </button>
+            
+            <div class="whatsapp-info">
+                <i class="fab fa-whatsapp"></i>
+                <p>Envoi direct au</p>
+                <p><strong>+228 92 87 16 05</strong></p>
+                <p>Confirmation immédiate</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function sendToWhatsApp() {
+            const firstname = document.getElementById('firstname').value.trim();
+            const lastname = document.getElementById('lastname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const school = document.getElementById('school').value.trim();
+            const subject = document.getElementById('subject').value.trim();
+            const level = document.getElementById('level').value;
+            const message = document.getElementById('message').value.trim();
+            
+            if (!firstname || !lastname || !email || !phone || !school) {
+                alert('Veuillez remplir tous les champs obligatoires (*)');
+                return;
+            }
+            
+            if (!document.getElementById('terms').checked) {
+                alert('Veuillez accepter les conditions générales');
+                return;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Veuillez entrer une adresse email valide');
+                return;
+            }
+            
+            let whatsappMessage = `🎯 NOUVELLE COMMANDE KITE%0A%0A`;
+            whatsappMessage += `👤 INFORMATIONS%0A`;
+            whatsappMessage += `• Prénom: ${firstname}%0A`;
+            whatsappMessage += `• Nom: ${lastname}%0A`;
+            whatsappMessage += `• Email: ${email}%0A`;
+            whatsappMessage += `• Téléphone: ${phone}%0A`;
+            whatsappMessage += `• Établissement: ${school}%0A`;
+            whatsappMessage += `• Matière: ${subject || 'Non précisé'}%0A`;
+            whatsappMessage += `• Niveau: ${level || 'Non précisé'}%0A%0A`;
+            
+            if (message) {
+                whatsappMessage += `💬 MESSAGE:%0A${message}%0A%0A`;
+            }
+            
+            whatsappMessage += `💰 COMMANDE%0A`;
+            whatsappMessage += `• Produit: Kite%0A`;
+            whatsappMessage += `• Prix: 10.000 FCFA%0A`;
+            whatsappMessage += `• Durée: 12 mois%0A`;
+            whatsappMessage += `• Date: ${new Date().toLocaleDateString('fr-FR')}%0A%0A`;
+            whatsappMessage += `✅ En attente de traitement`;
+            
+            const phoneNumber = '92871605';
+            const whatsappUrl = `https://wa.me/228${phoneNumber}?text=${whatsappMessage}`;
+            
+            window.open(whatsappUrl, '_blank');
+            
+            setTimeout(() => {
+                alert('Commande envoyée ! Redirection vers WhatsApp...');
+            }, 500);
+        }
+        
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.startsWith('228')) {
+                value = value.substring(3);
+            }
+            
+            if (value.length > 8) {
+                value = value.substring(0, 8);
+            }
+            
+            if (value.length > 0) {
+                let formatted = '+228 ';
+                for (let i = 0; i < value.length; i++) {
+                    if (i === 2 || i === 4 || i === 6) {
+                        formatted += ' ';
+                    }
+                    formatted += value[i];
+                }
+                e.target.value = formatted;
+            }
+        });
+        
+        // Optimisation pour mobile
+        document.addEventListener('touchstart', function() {}, { passive: true });
+    </script>
+</body>
+</html>

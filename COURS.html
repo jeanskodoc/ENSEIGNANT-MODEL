@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créateur de Fiches de Leçons</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --danger: #e63946;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --problem: #ffd166;
+            --student-work: #a8dadc;
+            --homework: #cdb4db;
+            --prerequisites: #ffafcc;
+            --materials: #bde0fe;
+            --strategy: #cdb4db;
+            --text-red: #e63946;
+            --text-green: #2a9d8f;
+            --text-blue: #4361ee;
+            --text-black: #212529;
+            --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 15px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        header {
+            background: var(--gradient);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #4cc9f0, #f72585, #4361ee);
+        }
+        
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .app-description {
+            font-size: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .editor-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .editor-panel:hover {
+            box-shadow: var(--hover-shadow);
+        }
+        
+        .preview-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            overflow-y: auto;
+            max-height: calc(100vh - 100px);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .preview-panel:hover {
+            box-shadow: var(--hover-shadow);
+        }
+        
+        .panel-title {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .panel-title i {
+            color: var(--primary);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.95rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-success:hover {
+            background: #3ab0d5;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background: #e11571;
+        }
+        
+        .btn-info {
+            background: var(--primary);
+        }
+        
+        .btn-info:hover {
+            background: #3050d6;
+        }
+        
+        .btn-purple {
+            background: #7209b7;
+        }
+        
+        .btn-purple:hover {
+            background: #5e0796;
+        }
+        
+        .btn-pink {
+            background: #ffafcc;
+        }
+        
+        .btn-pink:hover {
+            background: #ff91ba;
+        }
+        
+        .btn-blue {
+            background: #bde0fe;
+        }
+        
+        .btn-blue:hover {
+            background: #a1d0fd;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .section-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .content-blocks {
+            margin-top: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        
+        .content-block {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid var(--primary);
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .content-block:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .block-title {
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.95rem;
+        }
+        
+        .block-actions {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 8px;
+            display: none;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .lesson-preview {
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+            min-height: 400px;
+            border-radius: 10px;
+        }
+        
+        .preview-header {
+            background: var(--gradient);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .school-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #ffd700;
+        }
+        
+        .lesson-title {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+        }
+        
+        .header-info {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .info-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .preview-content {
+            padding: 15px 0;
+        }
+        
+        .content-section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            color: var(--secondary);
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .definition, .theorem, .example, .exercise, .problem, .student-work, .solution, .homework, .prerequisites, .materials, .strategy {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .definition {
+            background: #e8f4fc;
+            border-left: 5px solid var(--primary);
+        }
+        
+        .theorem {
+            background: #e8f4fc;
+            border-left: 5px solid var(--primary);
+        }
+        
+        .example {
+            background: #e7f9ed;
+            border-left: 5px solid var(--success);
+        }
+        
+        .exercise {
+            background: #fef9e7;
+            border-left: 5px solid var(--warning);
+        }
+        
+        .problem {
+            background: var(--problem);
+            border-left: 5px solid #ffb347;
+        }
+        
+        .student-work {
+            background: var(--student-work);
+            border-left: 5px solid var(--primary);
+        }
+        
+        .solution {
+            background: #f4ecf7;
+            border-left: 5px solid #7209b7;
+        }
+        
+        .homework {
+            background: var(--homework);
+            border-left: 5px solid #7209b7;
+        }
+        
+        .prerequisites {
+            background: var(--prerequisites);
+            border-left: 5px solid #ff70a6;
+        }
+        
+        .materials {
+            background: var(--materials);
+            border-left: 5px solid #7fbfff;
+        }
+        
+        .strategy {
+            background: var(--strategy);
+            border-left: 5px solid #a663cc;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .homework-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* Styles pour la barre d'outils de formatage */
+        .formatting-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 6px;
+        }
+        
+        .format-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 6px;
+            background-color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        
+        .format-btn:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+        }
+        
+        .format-btn.active {
+            background-color: #e0e0e0;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .color-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .color-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-btn.red {
+            background-color: var(--text-red);
+        }
+        
+        .color-btn.green {
+            background-color: var(--text-green);
+        }
+        
+        .color-btn.blue {
+            background-color: var(--text-blue);
+        }
+        
+        .color-btn.black {
+            background-color: var(--text-black);
+        }
+        
+        .color-btn.active {
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .data-management {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .saved-lessons {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            background: #f8f9fa;
+        }
+        
+        .lesson-item {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            border-radius: 6px;
+        }
+        
+        .lesson-item:hover {
+            background: white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .lesson-item:last-child {
+            border-bottom: none;
+        }
+        
+        .lesson-info {
+            flex-grow: 1;
+        }
+        
+        .lesson-title-small {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .lesson-meta {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 3px;
+        }
+        
+        .lesson-actions {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .text-editor {
+            min-height: 100px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            background: white;
+            transition: all 0.3s;
+        }
+        
+        .text-editor:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .mobile-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .mobile-controls button {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .view-only-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .view-only-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 1001;
+        }
+        
+        .class-count {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .class-count-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .class-count-item.total {
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .teacher-display {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Responsive Design */
+        @media (min-width: 576px) {
+            .header-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .section-buttons {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .action-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .filter-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .header-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .section-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .action-buttons {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .filter-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            button {
+                width: auto;
+                margin-bottom: 0;
+            }
+            
+            .mobile-controls {
+                display: none;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .container {
+                grid-template-columns: 320px 1fr;
+            }
+            
+            .header-info {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .section-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .action-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .filter-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .container {
+                grid-template-columns: 350px 1fr;
+            }
+            
+            .action-buttons {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-chalkboard-teacher"></i> Créateur de Fiches de Leçons</h1>
+        <p class="app-description">Application permettant aux enseignants de créer des fiches de leçons dans toutes les matières et de les exporter en PDF</p>
+    </header>
+    
+    <div class="mobile-controls">
+        <button class="btn-info" onclick="toggleView('editor')">
+            <i class="fas fa-edit"></i> Éditeur
+        </button>
+        <button class="btn-success" onclick="toggleView('preview')">
+            <i class="fas fa-eye"></i> Aperçu
+        </button>
+    </div>
+    
+    <div class="container">
+        <div class="editor-panel" id="editor-panel">
+            <h2 class="panel-title"><i class="fas fa-edit"></i> Éditeur de leçon</h2>
+            
+            <div class="form-group">
+                <label for="school-name"><i class="fas fa-school"></i> Nom de l'établissement</label>
+                <input type="text" id="school-name" placeholder="Ex: Lycée Louis Pasteur">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-user-tie"></i> Nom de l'enseignant</label>
+                <div class="teacher-display">
+                    <i class="fas fa-user-tie"></i>
+                    <span id="teacher-name-display">KOLA Maniwah Essohouna</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="subject"><i class="fas fa-book"></i> Matière</label>
+                <input type="text" id="subject" placeholder="Ex: Mathématiques">
+            </div>
+            
+            <div class="form-group">
+                <label for="discipline"><i class="fas fa-graduation-cap"></i> Discipline</label>
+                <input type="text" id="discipline" placeholder="Ex: Géométrie">
+            </div>
+            
+            <div class="form-group">
+                <label for="lesson-theme"><i class="fas fa-palette"></i> Thème de la leçon</label>
+                <input type="text" id="lesson-theme" placeholder="Ex: Triangles et trigonométrie">
+            </div>
+            
+            <div class="form-group">
+                <label for="class-name"><i class="fas fa-users"></i> Classe/Niveau</label>
+                <input type="text" id="class-name" placeholder="Ex: Seconde 7">
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-user-friends"></i> Effectif de la classe</label>
+                <div class="class-count">
+                    <div class="form-group">
+                        <label for="boys-count">Garçons</label>
+                        <input type="number" id="boys-count" min="0" value="0" oninput="updateClassTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label for="girls-count">Filles</label>
+                        <input type="number" id="girls-count" min="0" value="0" oninput="updateClassTotal()">
+                    </div>
+                    <div class="class-count-item total">
+                        <div>Total</div>
+                        <div id="class-total">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="lesson-title"><i class="fas fa-heading"></i> Titre de la leçon</label>
+                <input type="text" id="lesson-title" placeholder="Ex: Théorèmes de Pythagore et de Thalès">
+            </div>
+            
+            <div class="form-group">
+                <label for="lesson-duration"><i class="fas fa-clock"></i> Durée de la leçon</label>
+                <input type="text" id="lesson-duration" placeholder="Ex: 4 heures">
+            </div>
+            
+            <div class="form-group">
+                <label for="lesson-date"><i class="fas fa-calendar-alt"></i> Date de la leçon</label>
+                <input type="date" id="lesson-date">
+            </div>
+            
+            <h3 class="panel-title"><i class="fas fa-plus-circle"></i> Ajouter des sections</h3>
+            
+            <div class="section-buttons">
+                <button class="btn-success" onclick="addSection('definition')">
+                    <i class="fas fa-bookmark"></i> Définition
+                </button>
+                <button class="btn-success" onclick="addSection('theorem')">
+                    <i class="fas fa-graduation-cap"></i> Théorème
+                </button>
+                <button class="btn-success" onclick="addSection('example')">
+                    <i class="fas fa-lightbulb"></i> Exemple
+                </button>
+                <button class="btn-success" onclick="addSection('exercise')">
+                    <i class="fas fa-pencil-alt"></i> Exercice
+                </button>
+                <button class="btn-info" onclick="addSection('problem')">
+                    <i class="fas fa-question-circle"></i> Problème
+                </button>
+                <button class="btn-info" onclick="addSection('student-work')">
+                    <i class="fas fa-user-graduate"></i> Travail élève
+                </button>
+                <button class="btn-info" onclick="addSection('solution')">
+                    <i class="fas fa-check-circle"></i> Solution
+                </button>
+                <button class="btn-warning" onclick="addSection('homework')">
+                    <i class="fas fa-tasks"></i> Devoir maison
+                </button>
+                <button class="btn-pink" onclick="addSection('prerequisites')">
+                    <i class="fas fa-layer-group"></i> Prérequis
+                </button>
+                <button class="btn-blue" onclick="addSection('materials')">
+                    <i class="fas fa-tools"></i> Matériel
+                </button>
+                <button class="btn-purple" onclick="addSection('strategy')">
+                    <i class="fas fa-chalkboard"></i> Stratégie
+                </button>
+                <button class="btn-warning" onclick="addImageSection()">
+                    <i class="fas fa-image"></i> Image
+                </button>
+            </div>
+            
+            <div class="content-blocks" id="content-blocks">
+                <!-- Les blocs de contenu seront ajoutés ici dynamiquement -->
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn-danger" onclick="resetLesson()">
+                    <i class="fas fa-trash"></i> Tout effacer
+                </button>
+                <button class="btn-purple" onclick="saveToLocalStorage()">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+                <button class="btn-info" onclick="exportToJson()">
+                    <i class="fas fa-file-export"></i> Exporter JSON
+                </button>
+                <button class="btn-warning" onclick="importFromJson()">
+                    <i class="fas fa-file-import"></i> Importer JSON
+                </button>
+                <button class="btn-success" onclick="generatePDF()">
+                    <i class="fas fa-file-pdf"></i> Générer PDF
+                </button>
+                <button class="btn-info" onclick="showViewOnlyPreview()">
+                    <i class="fas fa-expand"></i> Aperçu seul
+                </button>
+            </div>
+            
+            <div class="data-management">
+                <h3 class="panel-title"><i class="fas fa-filter"></i> Filtres de recherche</h3>
+                
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="form-group">
+                            <label for="filter-subject"><i class="fas fa-book"></i> Matière</label>
+                            <select id="filter-subject">
+                                <option value="">Toutes les matières</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-discipline"><i class="fas fa-graduation-cap"></i> Discipline</label>
+                            <select id="filter-discipline">
+                                <option value="">Toutes les disciplines</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <div class="form-group">
+                            <label for="filter-date"><i class="fas fa-calendar-alt"></i> Date</label>
+                            <input type="date" id="filter-date">
+                        </div>
+                        <button class="btn-info" onclick="loadFilteredLessons()">
+                            <i class="fas fa-search"></i> Filtrer
+                        </button>
+                        <button class="btn-warning" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Effacer
+                        </button>
+                    </div>
+                </div>
+                
+                <h3 class="panel-title"><i class="fas fa-history"></i> Leçons enregistrées</h3>
+                <div class="saved-lessons" id="saved-lessons">
+                    <!-- Les leçons enregistrées apparaîtront ici -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="preview-panel" id="preview-panel">
+            <h2 class="panel-title"><i class="fas fa-eye"></i> Aperçu de la leçon</h2>
+            
+            <div class="lesson-preview" id="lesson-preview">
+                <div class="preview-header">
+                    <div class="school-name" id="preview-school">Nom de l'établissement</div>
+                    <h1 class="lesson-title" id="preview-title">Titre de la leçon</h1>
+                    <p id="preview-subject">Matière: [Matière]</p>
+                    <p id="preview-theme">Thème: [Thème]</p>
+                    
+                    <div class="header-info">
+                        <div class="info-item">
+                            <i class="fas fa-user-tie"></i>
+                            <span id="preview-teacher">Enseignant: KOLA Maniwah Essohouna</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-users"></i>
+                            <span id="preview-class">Classe: [Classe]</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-user-friends"></i>
+                            <span id="preview-students">Effectif: [Effectif]</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-clock"></i>
+                            <span id="preview-duration">Durée: [Durée]</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="preview-date">Date: [Date]</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="preview-content" id="preview-content">
+                    <p>Le contenu de votre leçon apparaîtra ici.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-only-overlay" class="view-only-overlay" style="display: none;">
+        <div class="view-only-content">
+            <button class="close-btn" onclick="closeViewOnlyPreview()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="view-only-preview">
+                <!-- Le contenu de l'aperçu sera inséré ici -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Nom de l'enseignant fixe
+        const TEACHER_NAME = "KOLA Maniwah Essohouna";
+        
+        // Initialisation des champs avec des valeurs par défaut
+        document.getElementById('school-name').value = 'Lycée Louis Pasteur';
+        document.getElementById('subject').value = 'Mathématiques';
+        document.getElementById('discipline').value = 'Géométrie';
+        document.getElementById('lesson-theme').value = 'Triangles et trigonométrie';
+        document.getElementById('class-name').value = 'Seconde 7';
+        document.getElementById('lesson-title').value = 'Théorèmes de Pythagore et de Thalès';
+        document.getElementById('lesson-duration').value = '4 heures';
+        document.getElementById('lesson-date').valueAsDate = new Date();
+        
+        // Calcul initial de l'effectif total
+        updateClassTotal();
+        
+        // Mise à jour de l'aperçu
+        updatePreview();
+        
+        // Charger les leçons enregistrées
+        loadSavedLessons();
+        updateFilterOptions();
+        
+        // Fonction pour calculer l'effectif total
+        function updateClassTotal() {
+            const boys = parseInt(document.getElementById('boys-count').value) || 0;
+            const girls = parseInt(document.getElementById('girls-count').value) || 0;
+            const total = boys + girls;
+            document.getElementById('class-total').textContent = total;
+            updatePreview();
+        }
+        
+        // Fonction pour basculer entre l'éditeur et l'aperçu sur mobile
+        function toggleView(view) {
+            const editorPanel = document.getElementById('editor-panel');
+            const previewPanel = document.getElementById('preview-panel');
+            
+            if (view === 'editor') {
+                editorPanel.style.display = 'flex';
+                previewPanel.style.display = 'none';
+            } else {
+                editorPanel.style.display = 'none';
+                previewPanel.style.display = 'block';
+            }
+        }
+        
+        // Fonction pour afficher l'aperçu seul en plein écran
+        function showViewOnlyPreview() {
+            const overlay = document.getElementById('view-only-overlay');
+            const previewContent = document.getElementById('view-only-preview');
+            
+            // Copier le contenu de l'aperçu
+            previewContent.innerHTML = document.getElementById('lesson-preview').innerHTML;
+            
+            // Afficher l'overlay
+            overlay.style.display = 'flex';
+        }
+        
+        // Fonction pour fermer l'aperçu seul
+        function closeViewOnlyPreview() {
+            const overlay = document.getElementById('view-only-overlay');
+            overlay.style.display = 'none';
+        }
+        
+        // Fonction pour mettre à jour l'aperçu
+        function updatePreview() {
+            document.getElementById('preview-school').textContent = document.getElementById('school-name').value;
+            document.getElementById('preview-title').textContent = document.getElementById('lesson-title').value;
+            document.getElementById('preview-subject').textContent = 'Matière: ' + document.getElementById('subject').value;
+            document.getElementById('preview-theme').textContent = 'Thème: ' + document.getElementById('lesson-theme').value;
+            document.getElementById('preview-class').textContent = 'Classe: ' + document.getElementById('class-name').value;
+            document.getElementById('preview-duration').textContent = 'Durée: ' + document.getElementById('lesson-duration').value;
+            
+            // Mise à jour de l'effectif
+            const boys = parseInt(document.getElementById('boys-count').value) || 0;
+            const girls = parseInt(document.getElementById('girls-count').value) || 0;
+            const total = boys + girls;
+            document.getElementById('preview-students').textContent = `Effectif: ${total} élèves (${boys} garçons, ${girls} filles)`;
+            
+            const lessonDate = document.getElementById('lesson-date').value;
+            if (lessonDate) {
+                const formattedDate = new Date(lessonDate).toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                document.getElementById('preview-date').textContent = 'Date: ' + formattedDate;
+            } else {
+                document.getElementById('preview-date').textContent = 'Date: Non spécifiée';
+            }
+        }
+        
+        // Écouteurs d'événements pour la mise à jour en temps réel
+        document.getElementById('school-name').addEventListener('input', updatePreview);
+        document.getElementById('subject').addEventListener('input', updatePreview);
+        document.getElementById('discipline').addEventListener('input', updatePreview);
+        document.getElementById('lesson-theme').addEventListener('input', updatePreview);
+        document.getElementById('class-name').addEventListener('input', updatePreview);
+        document.getElementById('lesson-title').addEventListener('input', updatePreview);
+        document.getElementById('lesson-duration').addEventListener('input', updatePreview);
+        document.getElementById('lesson-date').addEventListener('input', updatePreview);
+        document.getElementById('boys-count').addEventListener('input', updatePreview);
+        document.getElementById('girls-count').addEventListener('input', updatePreview);
+        
+        // Compteur pour les IDs des blocs
+        let blockCount = 0;
+        
+        // Fonction pour ajouter une section
+        function addSection(type) {
+            blockCount++;
+            const blockId = `block-${blockCount}`;
+            
+            let blockTitle = '';
+            let placeholder = '';
+            let icon = '';
+            
+            switch(type) {
+                case 'definition':
+                    blockTitle = 'Définition';
+                    placeholder = 'Saisissez votre définition ici...';
+                    icon = 'fas fa-bookmark';
+                    break;
+                case 'theorem':
+                    blockTitle = 'Théorème';
+                    placeholder = 'Énoncez le théorème ici...';
+                    icon = 'fas fa-graduation-cap';
+                    break;
+                case 'example':
+                    blockTitle = 'Exemple';
+                    placeholder = 'Décrivez votre exemple ici...';
+                    icon = 'fas fa-lightbulb';
+                    break;
+                case 'exercise':
+                    blockTitle = 'Exercice';
+                    placeholder = 'Décrivez l\'exercice ici...';
+                    icon = 'fas fa-pencil-alt';
+                    break;
+                case 'problem':
+                    blockTitle = 'Situation Problème';
+                    placeholder = 'Décrivez la situation problème ici...';
+                    icon = 'fas fa-question-circle';
+                    break;
+                case 'student-work':
+                    blockTitle = 'Travail de l\'Élève';
+                    placeholder = 'Décrivez le travail attendu de l\'élève ici...';
+                    icon = 'fas fa-user-graduate';
+                    break;
+                case 'solution':
+                    blockTitle = 'Solution';
+                    placeholder = 'Expliquez la solution ici...';
+                    icon = 'fas fa-check-circle';
+                    break;
+                case 'homework':
+                    blockTitle = 'Devoir Maison';
+                    placeholder = 'Décrivez le devoir maison ici...';
+                    icon = 'fas fa-tasks';
+                    break;
+                case 'prerequisites':
+                    blockTitle = 'Prérequis';
+                    placeholder = 'Listez les prérequis nécessaires pour cette leçon...';
+                    icon = 'fas fa-layer-group';
+                    break;
+                case 'materials':
+                    blockTitle = 'Matériel Didactique';
+                    placeholder = 'Listez le matériel nécessaire pour cette leçon...';
+                    icon = 'fas fa-tools';
+                    break;
+                case 'strategy':
+                    blockTitle = 'Stratégie Pédagogique';
+                    placeholder = 'Décrivez la stratégie pédagogique utilisée...';
+                    icon = 'fas fa-chalkboard';
+                    break;
+                default:
+                    blockTitle = 'Texte';
+                    placeholder = 'Saisissez votre texte ici...';
+                    icon = 'fas fa-paragraph';
+            }
+            
+            const blockHTML = `
+                <div class="content-block" id="${blockId}">
+                    <div class="block-header">
+                        <span class="block-title"><i class="${icon}"></i> ${blockTitle}</span>
+                        <div class="block-actions">
+                            <button class="btn-danger" onclick="removeBlock('${blockId}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    ${type === 'homework' ? `
+                        <div class="form-group">
+                            <label for="${blockId}-due-date"><i class="fas fa-calendar-alt"></i> Date de ramassage</label>
+                            <input type="date" id="${blockId}-due-date" onchange="updateContent('${blockId}', '${type}')">
+                        </div>
+                    ` : ''}
+                    <div class="formatting-toolbar" id="toolbar-${blockId}">
+                        <button class="format-btn" title="Gras" onclick="applyFormat('${blockId}', 'bold')">
+                            <i class="fas fa-bold"></i>
+                        </button>
+                        <button class="format-btn" title="Italique" onclick="applyFormat('${blockId}', 'italic')">
+                            <i class="fas fa-italic"></i>
+                        </button>
+                        <button class="format-btn" title="Souligné" onclick="applyFormat('${blockId}', 'underline')">
+                            <i class="fas fa-underline"></i>
+                        </button>
+                        <button class="format-btn" title="Barré" onclick="applyFormat('${blockId}', 'strikeThrough')">
+                            <i class="fas fa-strikethrough"></i>
+                        </button>
+                        <button class="color-btn red" title="Texte rouge" onclick="applyColor('${blockId}', 'red')"></button>
+                        <button class="color-btn green" title="Texte vert" onclick="applyColor('${blockId}', 'green')"></button>
+                        <button class="color-btn blue" title="Texte bleu" onclick="applyColor('${blockId}', 'blue')"></button>
+                        <button class="color-btn black active" title="Texte noir" onclick="applyColor('${blockId}', 'black')"></button>
+                    </div>
+                    <div id="editor-${blockId}" contenteditable="true" class="text-editor" oninput="updateContent('${blockId}', '${type}')">
+                        ${placeholder}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('content-blocks').insertAdjacentHTML('beforeend', blockHTML);
+            updateContentPreview(blockId, type, '', '');
+        }
+        
+        // Fonction pour appliquer un formatage de texte
+        function applyFormat(blockId, format) {
+            const editor = document.getElementById(`editor-${blockId}`);
+            
+            // Sauvegarder la sélection actuelle
+            const selection = window.getSelection();
+            const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+            
+            // Appliquer le formatage
+            document.execCommand(format, false, null);
+            
+            // Restaurer la sélection
+            if (range) {
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+            
+            // Mettre à jour le contenu
+            const type = getBlockType(blockId);
+            updateContent(blockId, type);
+        }
+        
+        // Fonction pour appliquer une couleur au texte
+        function applyColor(blockId, color) {
+            const editor = document.getElementById(`editor-${blockId}`);
+            const toolbar = document.getElementById(`toolbar-${blockId}`);
+            
+            // Mettre à jour les boutons actifs
+            const buttons = toolbar.querySelectorAll('.color-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            toolbar.querySelector(`.color-btn.${color}`).classList.add('active');
+            
+            // Sauvegarder la sélection actuelle
+            const selection = window.getSelection();
+            const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+            
+            // Appliquer la couleur au texte sélectionné
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('foreColor', false, getColorValue(color));
+            
+            // Restaurer la sélection
+            if (range) {
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+            
+            // Mettre à jour le contenu
+            const type = getBlockType(blockId);
+            updateContent(blockId, type);
+        }
+        
+        // Fonction pour obtenir la valeur de couleur
+        function getColorValue(color) {
+            switch(color) {
+                case 'red': return '#e63946';
+                case 'green': return '#2a9d8f';
+                case 'blue': return '#4361ee';
+                case 'black': return '#212529';
+                default: return '#212529';
+            }
+        }
+        
+        // Fonction pour obtenir le type d'un bloc
+        function getBlockType(blockId) {
+            const block = document.getElementById(blockId);
+            const title = block.querySelector('.block-title').textContent.toLowerCase();
+            
+            if (title.includes('définition')) return 'definition';
+            if (title.includes('théorème')) return 'theorem';
+            if (title.includes('exemple')) return 'example';
+            if (title.includes('exercice')) return 'exercise';
+            if (title.includes('situation')) return 'problem';
+            if (title.includes('travail')) return 'student-work';
+            if (title.includes('solution')) return 'solution';
+            if (title.includes('devoir')) return 'homework';
+            if (title.includes('prérequis')) return 'prerequisites';
+            if (title.includes('matériel')) return 'materials';
+            if (title.includes('stratégie')) return 'strategy';
+            return 'text';
+        }
+        
+        // Fonction pour ajouter une section d'image
+        function addImageSection() {
+            blockCount++;
+            const blockId = `block-${blockCount}`;
+            
+            const blockHTML = `
+                <div class="content-block" id="${blockId}">
+                    <div class="block-header">
+                        <span class="block-title"><i class="fas fa-image"></i> Image</span>
+                        <div class="block-actions">
+                            <button class="btn-danger" onclick="removeBlock('${blockId}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="${blockId}-image-upload"><i class="fas fa-upload"></i> Importer une image</label>
+                        <input type="file" id="${blockId}-image-upload" accept="image/*" onchange="handleImageUpload('${blockId}', this)">
+                    </div>
+                    <div class="form-group">
+                        <label for="${blockId}-image-caption"><i class="fas fa-font"></i> Légende (optionnel)</label>
+                        <input type="text" id="${blockId}-image-caption" placeholder="Saisissez une légende..." oninput="updateImageCaption('${blockId}', this.value)">
+                    </div>
+                    <img id="${blockId}-image-preview" class="image-preview" src="" alt="Aperçu de l'image">
+                </div>
+            `;
+            
+            document.getElementById('content-blocks').insertAdjacentHTML('beforeend', blockHTML);
+        }
+        
+        // Fonction pour gérer l'upload d'image
+        function handleImageUpload(blockId, input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imagePreview = document.getElementById(`${blockId}-image-preview`);
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    
+                    // Mettre à jour l'aperçu
+                    updateImagePreview(blockId, e.target.result, document.getElementById(`${blockId}-image-caption`).value);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Fonction pour mettre à jour la légende de l'image
+        function updateImageCaption(blockId, caption) {
+            const imagePreview = document.getElementById(`${blockId}-image-preview`);
+            if (imagePreview.src) {
+                updateImagePreview(blockId, imagePreview.src, caption);
+            }
+        }
+        
+        // Fonction pour mettre à jour l'aperçu de l'image
+        function updateImagePreview(blockId, imageData, caption) {
+            let previewElement = document.getElementById(`preview-${blockId}`);
+            
+            if (!previewElement) {
+                previewElement = document.createElement('div');
+                previewElement.id = `preview-${blockId}`;
+                previewElement.className = 'content-section';
+                document.getElementById('preview-content').appendChild(previewElement);
+            }
+            
+            previewElement.innerHTML = `
+                <h3 class="section-title"><i class="fas fa-image"></i> Illustration</h3>
+                <img src="${imageData}" class="preview-image" alt="Illustration">
+                ${caption ? `<p class="image-caption"><em>${caption}</em></p>` : ''}
+            `;
+        }
+        
+        // Fonction pour mettre à jour le contenu de l'aperçu
+        function updateContent(blockId, type) {
+            const editor = document.getElementById(`editor-${blockId}`);
+            const content = editor ? editor.innerHTML : '';
+            
+            let dueDate = '';
+            if (type === 'homework') {
+                const dueDateInput = document.getElementById(`${blockId}-due-date`);
+                dueDate = dueDateInput ? dueDateInput.value : '';
+            }
+            
+            updateContentPreview(blockId, type, content, dueDate);
+        }
+        
+        // Fonction pour mettre à jour l'aperçu du contenu
+        function updateContentPreview(blockId, type, content, dueDate) {
+            let previewElement = document.getElementById(`preview-${blockId}`);
+            
+            if (!previewElement) {
+                previewElement = document.createElement('div');
+                previewElement.id = `preview-${blockId}`;
+                previewElement.className = 'content-section';
+                document.getElementById('preview-content').appendChild(previewElement);
+            }
+            
+            let title = '';
+            let className = '';
+            let icon = '';
+            
+            switch(type) {
+                case 'definition':
+                    title = 'Définition';
+                    className = 'definition';
+                    icon = 'fas fa-bookmark';
+                    break;
+                case 'theorem':
+                    title = 'Théorème';
+                    className = 'theorem';
+                    icon = 'fas fa-graduation-cap';
+                    break;
+                case 'example':
+                    title = 'Exemple';
+                    className = 'example';
+                    icon = 'fas fa-lightbulb';
+                    break;
+                case 'exercise':
+                    title = 'Exercice';
+                    className = 'exercise';
+                    icon = 'fas fa-pencil-alt';
+                    break;
+                case 'problem':
+                    title = 'Situation Problème';
+                    className = 'problem';
+                    icon = 'fas fa-question-circle';
+                    break;
+                case 'student-work':
+                    title = 'Travail de l\'Élève';
+                    className = 'student-work';
+                    icon = 'fas fa-user-graduate';
+                    break;
+                case 'solution':
+                    title = 'Solution';
+                    className = 'solution';
+                    icon = 'fas fa-check-circle';
+                    break;
+                case 'homework':
+                    title = 'Devoir Maison';
+                    className = 'homework';
+                    icon = 'fas fa-tasks';
+                    break;
+                case 'prerequisites':
+                    title = 'Prérequis';
+                    className = 'prerequisites';
+                    icon = 'fas fa-layer-group';
+                    break;
+                case 'materials':
+                    title = 'Matériel Didactique';
+                    className = 'materials';
+                    icon = 'fas fa-tools';
+                    break;
+                case 'strategy':
+                    title = 'Stratégie Pédagogique';
+                    className = 'strategy';
+                    icon = 'fas fa-chalkboard';
+                    break;
+                default:
+                    title = '';
+                    className = '';
+                    icon = 'fas fa-paragraph';
+            }
+            
+            let dueDateHtml = '';
+            if (type === 'homework' && dueDate) {
+                const formattedDate = new Date(dueDate).toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                dueDateHtml = `<div class="homework-info"><i class="fas fa-calendar-alt"></i> Date de ramassage: ${formattedDate}</div>`;
+            }
+            
+            previewElement.innerHTML = `
+                <h3 class="section-title"><i class="${icon}"></i> ${title}</h3>
+                <div class="${className}">
+                    ${content}
+                    ${dueDateHtml}
+                </div>
+            `;
+        }
+        
+        // Fonction pour supprimer un bloc
+        function removeBlock(blockId) {
+            const block = document.getElementById(blockId);
+            block.remove();
+            
+            const previewBlock = document.getElementById(`preview-${blockId}`);
+            if (previewBlock) {
+                previewBlock.remove();
+            }
+        }
+        
+        // Fonction pour réinitialiser la leçon
+        function resetLesson() {
+            if (confirm('Êtes-vous sûr de vouloir tout effacer ?')) {
+                document.getElementById('content-blocks').innerHTML = '';
+                document.getElementById('preview-content').innerHTML = '<p>Le contenu de votre leçon apparaîtra ici.</p>';
+                blockCount = 0;
+            }
+        }
+        
+        // Fonction pour générer le PDF
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Capture de l'aperçu avec html2canvas
+            html2canvas(document.getElementById('lesson-preview')).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = doc.internal.pageSize.getWidth();
+                let imgHeight = canvas.height * imgWidth / canvas.width;
+                
+                // Ajout de l'image au PDF
+                doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                // Téléchargement du PDF
+                doc.save('fiche-leçon.pdf');
+            });
+        }
+        
+        // Fonction pour enregistrer dans le stockage local
+        function saveToLocalStorage() {
+            const lessonData = collectLessonData();
+            
+            // Générer un ID unique pour cette leçon
+            const timestamp = new Date().getTime();
+            const lessonId = `lesson_${timestamp}`;
+            
+            // Enregistrer dans le localStorage
+            localStorage.setItem(lessonId, JSON.stringify(lessonData));
+            
+            alert('Leçon enregistrée avec succès!');
+            
+            // Mettre à jour la liste des leçons
+            loadSavedLessons();
+            updateFilterOptions();
+        }
+        
+        // Fonction pour collecter toutes les données de la leçon
+        function collectLessonData() {
+            const lessonData = {
+                school: document.getElementById('school-name').value,
+                teacher: TEACHER_NAME,
+                subject: document.getElementById('subject').value,
+                discipline: document.getElementById('discipline').value,
+                theme: document.getElementById('lesson-theme').value,
+                className: document.getElementById('class-name').value,
+                boysCount: document.getElementById('boys-count').value,
+                girlsCount: document.getElementById('girls-count').value,
+                title: document.getElementById('lesson-title').value,
+                duration: document.getElementById('lesson-duration').value,
+                date: document.getElementById('lesson-date').value,
+                content: []
+            };
+            
+            // Collecter tous les blocs de contenu
+            const blocks = document.getElementById('content-blocks').children;
+            for (let i = 0; i < blocks.length; i++) {
+                const block = blocks[i];
+                const blockId = block.id;
+                const type = getBlockType(blockId);
+                
+                let blockData = {
+                    type: type,
+                    content: document.getElementById(`editor-${blockId}`).innerHTML
+                };
+                
+                if (type === 'homework') {
+                    const dueDateInput = document.getElementById(`${blockId}-due-date`);
+                    blockData.dueDate = dueDateInput ? dueDateInput.value : '';
+                }
+                
+                if (type === 'image') {
+                    const imagePreview = document.getElementById(`${blockId}-image-preview`);
+                    blockData.imageData = imagePreview.src;
+                    blockData.caption = document.getElementById(`${blockId}-image-caption`).value;
+                }
+                
+                lessonData.content.push(blockData);
+            }
+            
+            return lessonData;
+        }
+        
+        // Fonction pour charger les leçons enregistrées
+        function loadSavedLessons() {
+            const savedLessonsContainer = document.getElementById('saved-lessons');
+            savedLessonsContainer.innerHTML = '';
+            
+            let hasLessons = false;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('lesson_')) {
+                    hasLessons = true;
+                    const lessonData = JSON.parse(localStorage.getItem(key));
+                    
+                    const lessonElement = document.createElement('div');
+                    lessonElement.className = 'lesson-item';
+                    
+                    const formattedDate = lessonData.date ? new Date(lessonData.date).toLocaleDateString('fr-FR') : 'Date non spécifiée';
+                    
+                    lessonElement.innerHTML = `
+                        <div class="lesson-info">
+                            <div class="lesson-title-small">${lessonData.title}</div>
+                            <div class="lesson-meta">${lessonData.subject} - ${lessonData.discipline} - ${formattedDate}</div>
+                        </div>
+                        <div class="lesson-actions">
+                            <button class="btn-info" title="Charger" onclick="loadLesson('${key}')">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn-danger" title="Supprimer" onclick="deleteLesson('${key}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn-success" title="Aperçu seul" onclick="showSavedLessonPreview('${key}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    savedLessonsContainer.appendChild(lessonElement);
+                }
+            }
+            
+            if (!hasLessons) {
+                savedLessonsContainer.innerHTML = '<p>Aucune leçon enregistrée.</p>';
+            }
+        }
+        
+        // Fonction pour afficher l'aperçu d'une leçon enregistrée
+        function showSavedLessonPreview(lessonId) {
+            const lessonData = JSON.parse(localStorage.getItem(lessonId));
+            const overlay = document.getElementById('view-only-overlay');
+            const previewContent = document.getElementById('view-only-preview');
+            
+            // Générer le contenu de l'aperçu
+            let previewHTML = `
+                <div class="preview-header">
+                    <div class="school-name">${lessonData.school || 'Nom de l\'établissement'}</div>
+                    <h1 class="lesson-title">${lessonData.title || 'Titre de la leçon'}</h1>
+                    <p>Matière: ${lessonData.subject || '[Matière]'}</p>
+                    <p>Thème: ${lessonData.theme || '[Thème]'}</p>
+                    
+                    <div class="header-info">
+                        <div class="info-item">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Enseignant: ${TEACHER_NAME}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-users"></i>
+                            <span>Classe: ${lessonData.className || '[Classe]'}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-user-friends"></i>
+                            <span>Effectif: ${(parseInt(lessonData.boysCount) || 0) + (parseInt(lessonData.girlsCount) || 0)} élèves (${lessonData.boysCount || 0} garçons, ${lessonData.girlsCount || 0} filles)</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Durée: ${lessonData.duration || '[Durée]'}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Date: ${lessonData.date ? new Date(lessonData.date).toLocaleDateString('fr-FR') : '[Date]'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-content">
+            `;
+            
+            // Ajouter le contenu de la leçon
+            if (lessonData.content && lessonData.content.length > 0) {
+                lessonData.content.forEach(blockData => {
+                    let title = '';
+                    let className = '';
+                    let icon = '';
+                    
+                    switch(blockData.type) {
+                        case 'definition':
+                            title = 'Définition';
+                            className = 'definition';
+                            icon = 'fas fa-bookmark';
+                            break;
+                        case 'theorem':
+                            title = 'Théorème';
+                            className = 'theorem';
+                            icon = 'fas fa-graduation-cap';
+                            break;
+                        case 'example':
+                            title = 'Exemple';
+                            className = 'example';
+                            icon = 'fas fa-lightbulb';
+                            break;
+                        case 'exercise':
+                            title = 'Exercice';
+                            className = 'exercise';
+                            icon = 'fas fa-pencil-alt';
+                            break;
+                        case 'problem':
+                            title = 'Situation Problème';
+                            className = 'problem';
+                            icon = 'fas fa-question-circle';
+                            break;
+                        case 'student-work':
+                            title = 'Travail de l\'Élève';
+                            className = 'student-work';
+                            icon = 'fas fa-user-graduate';
+                            break;
+                        case 'solution':
+                            title = 'Solution';
+                            className = 'solution';
+                            icon = 'fas fa-check-circle';
+                            break;
+                        case 'homework':
+                            title = 'Devoir Maison';
+                            className = 'homework';
+                            icon = 'fas fa-tasks';
+                            break;
+                        case 'prerequisites':
+                            title = 'Prérequis';
+                            className = 'prerequisites';
+                            icon = 'fas fa-layer-group';
+                            break;
+                        case 'materials':
+                            title = 'Matériel Didactique';
+                            className = 'materials';
+                            icon = 'fas fa-tools';
+                            break;
+                        case 'strategy':
+                            title = 'Stratégie Pédagogique';
+                            className = 'strategy';
+                            icon = 'fas fa-chalkboard';
+                            break;
+                        case 'image':
+                            title = 'Illustration';
+                            className = 'image';
+                            icon = 'fas fa-image';
+                            break;
+                        default:
+                            title = '';
+                            className = '';
+                            icon = 'fas fa-paragraph';
+                    }
+                    
+                    let dueDateHtml = '';
+                    if (blockData.type === 'homework' && blockData.dueDate) {
+                        const formattedDate = new Date(blockData.dueDate).toLocaleDateString('fr-FR', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        dueDateHtml = `<div class="homework-info"><i class="fas fa-calendar-alt"></i> Date de ramassage: ${formattedDate}</div>`;
+                    }
+                    
+                    if (blockData.type === 'image') {
+                        previewHTML += `
+                            <div class="content-section">
+                                <h3 class="section-title"><i class="${icon}"></i> ${title}</h3>
+                                <img src="${blockData.imageData}" class="preview-image" alt="Illustration">
+                                ${blockData.caption ? `<p class="image-caption"><em>${blockData.caption}</em></p>` : ''}
+                            </div>
+                        `;
+                    } else {
+                        previewHTML += `
+                            <div class="content-section">
+                                <h3 class="section-title"><i class="${icon}"></i> ${title}</h3>
+                                <div class="${className}">
+                                    ${blockData.content}
+                                    ${dueDateHtml}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                previewHTML += '<p>Aucun contenu dans cette leçon.</p>';
+            }
+            
+            previewHTML += '</div>';
+            previewContent.innerHTML = previewHTML;
+            
+            // Afficher l'overlay
+            overlay.style.display = 'flex';
+        }
+        
+        // Fonction pour charger une leçon spécifique
+        function loadLesson(lessonId) {
+            if (confirm('Charger cette leçon? Le contenu actuel sera perdu.')) {
+                const lessonData = JSON.parse(localStorage.getItem(lessonId));
+                
+                // Remplir les champs de base
+                document.getElementById('school-name').value = lessonData.school || '';
+                document.getElementById('subject').value = lessonData.subject || '';
+                document.getElementById('discipline').value = lessonData.discipline || '';
+                document.getElementById('lesson-theme').value = lessonData.theme || '';
+                document.getElementById('class-name').value = lessonData.className || '';
+                document.getElementById('boys-count').value = lessonData.boysCount || '';
+                document.getElementById('girls-count').value = lessonData.girlsCount || '';
+                document.getElementById('lesson-title').value = lessonData.title || '';
+                document.getElementById('lesson-duration').value = lessonData.duration || '';
+                document.getElementById('lesson-date').value = lessonData.date || '';
+                
+                // Mettre à jour le total
+                updateClassTotal();
+                
+                // Effacer le contenu actuel
+                document.getElementById('content-blocks').innerHTML = '';
+                document.getElementById('preview-content').innerHTML = '';
+                blockCount = 0;
+                
+                // Charger le contenu
+                if (lessonData.content && lessonData.content.length > 0) {
+                    lessonData.content.forEach(blockData => {
+                        if (blockData.type === 'image') {
+                            addImageSection();
+                            const currentBlockId = `block-${blockCount}`;
+                            
+                            // Mettre à jour l'image
+                            if (blockData.imageData) {
+                                const imagePreview = document.getElementById(`${currentBlockId}-image-preview`);
+                                imagePreview.src = blockData.imageData;
+                                imagePreview.style.display = 'block';
+                            }
+                            
+                            // Mettre à jour la légende
+                            if (blockData.caption) {
+                                document.getElementById(`${currentBlockId}-image-caption`).value = blockData.caption;
+                            }
+                            
+                            // Mettre à jour l'aperçu
+                            updateImagePreview(currentBlockId, blockData.imageData, blockData.caption);
+                        } else {
+                            addSection(blockData.type);
+                            const currentBlockId = `block-${blockCount}`;
+                            
+                            // Mettre à jour le contenu
+                            const editor = document.getElementById(`editor-${currentBlockId}`);
+                            if (editor && blockData.content) {
+                                editor.innerHTML = blockData.content;
+                            }
+                            
+                            // Mettre à jour la date de ramassage pour les devoirs
+                            if (blockData.type === 'homework' && blockData.dueDate) {
+                                document.getElementById(`${currentBlockId}-due-date`).value = blockData.dueDate;
+                            }
+                            
+                            // Mettre à jour l'aperçu
+                            updateContent(currentBlockId, blockData.type);
+                        }
+                    });
+                }
+                
+                // Mettre à jour l'aperçu général
+                updatePreview();
+            }
+        }
+        
+        // Fonction pour supprimer une leçon
+        function deleteLesson(lessonId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette leçon?')) {
+                localStorage.removeItem(lessonId);
+                loadSavedLessons();
+                updateFilterOptions();
+            }
+        }
+        
+        // Fonction pour exporter en JSON
+        function exportToJson() {
+            const lessonData = collectLessonData();
+            const dataStr = JSON.stringify(lessonData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `${lessonData.subject}_${lessonData.title}.json`.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+        
+        // Fonction pour importer depuis JSON
+        function importFromJson() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const lessonData = JSON.parse(e.target.result);
+                        
+                        if (confirm('Importer cette leçon? Le contenu actuel sera perdu.')) {
+                            // Remplir les champs de base
+                            document.getElementById('school-name').value = lessonData.school || '';
+                            document.getElementById('subject').value = lessonData.subject || '';
+                            document.getElementById('discipline').value = lessonData.discipline || '';
+                            document.getElementById('lesson-theme').value = lessonData.theme || '';
+                            document.getElementById('class-name').value = lessonData.className || '';
+                            document.getElementById('boys-count').value = lessonData.boysCount || '';
+                            document.getElementById('girls-count').value = lessonData.girlsCount || '';
+                            document.getElementById('lesson-title').value = lessonData.title || '';
+                            document.getElementById('lesson-duration').value = lessonData.duration || '';
+                            document.getElementById('lesson-date').value = lessonData.date || '';
+                            
+                            // Mettre à jour le total
+                            updateClassTotal();
+                            
+                            // Effacer le contenu actuel
+                            document.getElementById('content-blocks').innerHTML = '';
+                            document.getElementById('preview-content').innerHTML = '';
+                            blockCount = 0;
+                            
+                            // Charger le contenu
+                            if (lessonData.content && lessonData.content.length > 0) {
+                                lessonData.content.forEach(blockData => {
+                                    if (blockData.type === 'image') {
+                                        addImageSection();
+                                        const currentBlockId = `block-${blockCount}`;
+                                        
+                                        // Mettre à jour l'image
+                                        if (blockData.imageData) {
+                                            const imagePreview = document.getElementById(`${currentBlockId}-image-preview`);
+                                            imagePreview.src = blockData.imageData;
+                                            imagePreview.style.display = 'block';
+                                        }
+                                        
+                                        // Mettre à jour la légende
+                                        if (blockData.caption) {
+                                            document.getElementById(`${currentBlockId}-image-caption`).value = blockData.caption;
+                                        }
+                                        
+                                        // Mettre à jour l'aperçu
+                                        updateImagePreview(currentBlockId, blockData.imageData, blockData.caption);
+                                    } else {
+                                        addSection(blockData.type);
+                                        const currentBlockId = `block-${blockCount}`;
+                                        
+                                        // Mettre à jour le contenu
+                                        const editor = document.getElementById(`editor-${currentBlockId}`);
+                                        if (editor && blockData.content) {
+                                            editor.innerHTML = blockData.content;
+                                        }
+                                        
+                                        // Mettre à jour la date de ramassage pour les devoirs
+                                        if (blockData.type === 'homework' && blockData.dueDate) {
+                                            document.getElementById(`${currentBlockId}-due-date`).value = blockData.dueDate;
+                                        }
+                                        
+                                        // Mettre à jour l'aperçu
+                                        updateContent(currentBlockId, blockData.type);
+                                    }
+                                });
+                            }
+                            
+                            // Mettre à jour l'aperçu général
+                            updatePreview();
+                        }
+                    } catch (error) {
+                        alert('Erreur lors de l\'import du fichier: ' + error.message);
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+        
+        // Fonction pour mettre à jour les options des filtres
+        function updateFilterOptions() {
+            const subjectFilter = document.getElementById('filter-subject');
+            const disciplineFilter = document.getElementById('filter-discipline');
+            
+            // Sauvegarder les valeurs actuelles
+            const currentSubject = subjectFilter.value;
+            const currentDiscipline = disciplineFilter.value;
+            
+            // Réinitialiser les filtres (en gardant l'option "Tous")
+            while (subjectFilter.options.length > 1) subjectFilter.remove(1);
+            while (disciplineFilter.options.length > 1) disciplineFilter.remove(1);
+            
+            const subjects = new Set();
+            const disciplines = new Set();
+            
+            // Collecter toutes les matières et disciplines disponibles
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('lesson_')) {
+                    const lessonData = JSON.parse(localStorage.getItem(key));
+                    if (lessonData.subject) subjects.add(lessonData.subject);
+                    if (lessonData.discipline) disciplines.add(lessonData.discipline);
+                }
+            }
+            
+            // Ajouter les options de matière
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                subjectFilter.appendChild(option);
+            });
+            
+            // Ajouter les options de discipline
+            disciplines.forEach(discipline => {
+                const option = document.createElement('option');
+                option.value = discipline;
+                option.textContent = discipline;
+                disciplineFilter.appendChild(option);
+            });
+            
+            // Restaurer les valeurs précédentes si elles existent toujours
+            if (currentSubject && Array.from(subjects).includes(currentSubject)) {
+                subjectFilter.value = currentSubject;
+            }
+            
+            if (currentDiscipline && Array.from(disciplines).includes(currentDiscipline)) {
+                disciplineFilter.value = currentDiscipline;
+            }
+        }
+        
+        // Fonction pour charger les leçons filtrées
+        function loadFilteredLessons() {
+            const subjectFilter = document.getElementById('filter-subject').value;
+            const disciplineFilter = document.getElementById('filter-discipline').value;
+            const dateFilter = document.getElementById('filter-date').value;
+            
+            const savedLessonsContainer = document.getElementById('saved-lessons');
+            savedLessonsContainer.innerHTML = '';
+            
+            let hasFilteredLessons = false;
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('lesson_')) {
+                    const lessonData = JSON.parse(localStorage.getItem(key));
+                    
+                    // Vérifier les filtres
+                    if (subjectFilter && lessonData.subject !== subjectFilter) continue;
+                    if (disciplineFilter && lessonData.discipline !== disciplineFilter) continue;
+                    if (dateFilter && lessonData.date !== dateFilter) continue;
+                    
+                    hasFilteredLessons = true;
+                    
+                    const lessonElement = document.createElement('div');
+                    lessonElement.className = 'lesson-item';
+                    
+                    const formattedDate = lessonData.date ? new Date(lessonData.date).toLocaleDateString('fr-FR') : 'Date non spécifiée';
+                    
+                    lessonElement.innerHTML = `
+                        <div class="lesson-info">
+                            <div class="lesson-title-small">${lessonData.title}</div>
+                            <div class="lesson-meta">${lessonData.subject} - ${lessonData.discipline} - ${formattedDate}</div>
+                        </div>
+                        <div class="lesson-actions">
+                            <button class="btn-info" title="Charger" onclick="loadLesson('${key}')">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn-danger" title="Supprimer" onclick="deleteLesson('${key}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn-success" title="Aperçu seul" onclick="showSavedLessonPreview('${key}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    savedLessonsContainer.appendChild(lessonElement);
+                }
+            }
+            
+            if (!hasFilteredLessons) {
+                savedLessonsContainer.innerHTML = '<p>Aucune leçon ne correspond aux filtres.</p>';
+            }
+        }
+        
+        // Fonction pour effacer les filtres
+        function clearFilters() {
+            document.getElementById('filter-subject').value = '';
+            document.getElementById('filter-discipline').value = '';
+            document.getElementById('filter-date').value = '';
+            loadSavedLessons();
+        }
+    </script>
+</body>
+</html>

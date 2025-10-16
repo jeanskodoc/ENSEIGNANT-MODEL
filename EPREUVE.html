@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créateur de Fiches d'Évaluation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-light: #5dade2;
+            --primary-dark: #2980b9;
+            --secondary: #2c3e50;
+            --secondary-light: #34495e;
+            --success: #2ecc71;
+            --success-light: #58d68d;
+            --warning: #f39c12;
+            --warning-light: #f7dc6f;
+            --danger: #e74c3c;
+            --danger-light: #ec7063;
+            --light: #f5f7fa;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+            --problem: #ffeaa7;
+            --student-work: #d6eaf8;
+            --homework: #e8d6ff;
+            --text-red: #e74c3c;
+            --text-green: #27ae60;
+            --text-blue: #3498db;
+            --text-black: #2c3e50;
+            --qcm: #d1ecf1;
+            --truefalse: #d4edda;
+            --fillblank: #fff3cd;
+            --traditional: #f8d7da;
+            --solution: #d4edda;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+            --radius-sm: 6px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 15px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 15px;
+        }
+        
+        header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: var(--radius);
+            margin-bottom: 15px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" opacity="0.1"><path fill="white" d="M30,30 L70,30 L70,70 L30,70 Z M35,35 L65,35 L65,65 L35,65 Z M40,40 L60,40 L60,60 L40,60 Z"></path></svg>');
+            background-size: 50px;
+        }
+        
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .app-description {
+            font-size: 0.95rem;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .editor-panel {
+            background: white;
+            border-radius: var(--radius);
+            padding: 15px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        
+        .preview-panel {
+            background: white;
+            border-radius: var(--radius);
+            padding: 15px;
+            box-shadow: var(--shadow);
+            overflow-y: auto;
+            max-height: calc(100vh - 90px);
+        }
+        
+        .panel-title {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+        
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        /* Styles des boutons principaux */
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            height: 36px;
+        }
+        
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .btn-info {
+            background: var(--primary);
+        }
+        
+        .btn-info:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-purple {
+            background: #9b59b6;
+        }
+        
+        .btn-purple:hover {
+            background: #8e44ad;
+        }
+        
+        .btn-solution {
+            background: #27ae60;
+        }
+        
+        .btn-solution:hover {
+            background: #219653;
+        }
+        
+        /* Bouton retour */
+        .btn-retour {
+            padding: 8px 12px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--dark);
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            height: 36px;
+        }
+        
+        .btn-retour:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-1px);
+        }
+        
+        /* Boutons d'action principaux */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .top-action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            justify-content: flex-end;
+        }
+        
+        /* Boutons de section plus compacts */
+        .section-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .section-buttons button {
+            height: 40px;
+            font-size: 0.8rem;
+            padding: 6px 10px;
+            justify-content: flex-start;
+            text-align: left;
+            line-height: 1.2;
+        }
+        
+        .section-buttons button i {
+            min-width: 16px;
+            font-size: 0.9rem;
+        }
+        
+        .content-blocks {
+            margin-top: 15px;
+        }
+        
+        .content-block {
+            background: #f8f9fa;
+            border-radius: var(--radius);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+        
+        .content-block:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .block-title {
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.95rem;
+        }
+        
+        .block-actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .block-actions button {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            justify-content: center;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            margin-top: 8px;
+            border-radius: var(--radius-sm);
+            display: none;
+            box-shadow: var(--shadow);
+        }
+        
+        .evaluation-preview {
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+            min-height: 400px;
+            border-radius: var(--radius);
+        }
+        
+        .preview-header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            z-index: 1;
+            font-weight: bold;
+        }
+        
+        .school-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #ffd700;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .evaluation-title {
+            font-size: 1.7rem;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .info-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .preview-content {
+            padding: 15px 0;
+        }
+        
+        .content-section {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        .section-title {
+            color: var(--secondary);
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1rem;
+        }
+        
+        .qcm, .truefalse, .fillblank, .traditional, .problem, .instructions, .solution {
+            padding: 15px;
+            border-radius: var(--radius);
+            margin: 12px 0;
+            box-shadow: var(--shadow);
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        .qcm {
+            background: var(--qcm);
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .truefalse {
+            background: var(--truefalse);
+            border-left: 4px solid #28a745;
+        }
+        
+        .fillblank {
+            background: var(--fillblank);
+            border-left: 4px solid #ffc107;
+        }
+        
+        .traditional {
+            background: var(--traditional);
+            border-left: 4px solid #dc3545;
+        }
+        
+        .problem {
+            background: var(--problem);
+            border-left: 4px solid #fdcb6e;
+        }
+        
+        .instructions {
+            background: #e8f4fc;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .solution {
+            background: var(--solution);
+            border-left: 4px solid #27ae60;
+            margin-top: 8px;
+        }
+        
+        .solution-title {
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            border-radius: var(--radius);
+            margin: 8px 0;
+            box-shadow: var(--shadow);
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        .question-points {
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: var(--radius-sm);
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+        
+        /* Barre d'outils de formatage plus compacte */
+        .formatting-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: var(--radius-sm);
+        }
+        
+        .format-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background-color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+        }
+        
+        .format-btn:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-1px);
+        }
+        
+        .format-btn.active {
+            background-color: #e0e0e0;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .color-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .color-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .color-btn.red {
+            background-color: var(--text-red);
+        }
+        
+        .color-btn.green {
+            background-color: var(--text-green);
+        }
+        
+        .color-btn.blue {
+            background-color: var(--text-blue);
+        }
+        
+        .color-btn.black {
+            background-color: var(--text-black);
+        }
+        
+        .color-btn.active {
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .option-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+        
+        .option-item input[type="text"] {
+            flex: 1;
+        }
+        
+        .option-item input[type="checkbox"] {
+            margin-right: 4px;
+        }
+        
+        .blank-input {
+            border-bottom: 1px solid #333;
+            display: inline-block;
+            min-width: 80px;
+            margin: 0 4px;
+        }
+        
+        .solution-toggle {
+            margin-top: 12px;
+            cursor: pointer;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            padding: 8px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .solution-toggle:hover {
+            background: rgba(52, 152, 219, 0.2);
+        }
+        
+        .solution-content {
+            display: none;
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--success);
+            box-shadow: var(--shadow);
+        }
+        
+        /* Éditeur de texte enrichi */
+        .rich-text-editor {
+            min-height: 120px;
+            border: 1px solid #ddd;
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            background: white;
+            line-height: 1.5;
+        }
+        
+        .rich-text-editor:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .rich-text-editor ul, .rich-text-editor ol {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        
+        .rich-text-editor ul {
+            list-style-type: disc;
+        }
+        
+        .rich-text-editor ol {
+            list-style-type: decimal;
+        }
+        
+        .rich-text-editor li {
+            margin-bottom: 4px;
+        }
+        
+        /* Numérotation des questions */
+        .question-number {
+            font-weight: bold;
+            color: var(--primary);
+            margin-right: 8px;
+        }
+        
+        .subquestion-letter {
+            font-weight: bold;
+            color: var(--secondary);
+            margin-right: 6px;
+        }
+        
+        .question-text {
+            margin-bottom: 12px;
+        }
+        
+        .subquestion {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        
+        /* Styles pour l'impression */
+        @media print {
+            body, html {
+                height: auto;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                font-size: 11pt;
+                line-height: 1.4;
+            }
+            
+            body * {
+                visibility: hidden;
+            }
+            
+            .container, .editor-panel, .preview-panel, header, .action-buttons, 
+            .section-buttons, .top-action-buttons, .modal, .btn-retour {
+                display: none !important;
+            }
+            
+            .evaluation-preview, .evaluation-preview * {
+                visibility: visible;
+            }
+            
+            .evaluation-preview {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                padding: 12px !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                background: white !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            .preview-header {
+                box-shadow: none !important;
+                margin-bottom: 12px !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%) !important;
+            }
+            
+            .content-section {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                margin-bottom: 15px !important;
+            }
+            
+            .qcm, .truefalse, .fillblank, .traditional, .problem, .instructions {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                margin: 8px 0 !important;
+            }
+            
+            .solution-content {
+                display: block !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            button, .formatting-toolbar, .solution-toggle, .block-actions, 
+            .image-preview[style*="display: none"] {
+                display: none !important;
+            }
+            
+            /* Assurer que tout le contenu est visible */
+            .preview-content {
+                display: block !important;
+            }
+            
+            /* Corriger l'affichage des images */
+            .preview-image {
+                max-width: 100% !important;
+                height: auto !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Styles d'impression optimisés */
+            .evaluation-title {
+                font-size: 18pt !important;
+                margin-bottom: 8px !important;
+            }
+            
+            .school-name {
+                font-size: 12pt !important;
+                margin-bottom: 4px !important;
+            }
+            
+            .section-title {
+                font-size: 12pt !important;
+                page-break-after: avoid;
+                margin-bottom: 6px !important;
+            }
+            
+            .question-points {
+                font-size: 9pt !important;
+                margin-top: 6px !important;
+            }
+            
+            /* Éviter les coupures dans les questions */
+            .qcm, .truefalse, .fillblank, .traditional, .problem, .instructions {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                margin: 6px 0 !important;
+            }
+            
+            /* Ajustements pour l'impression */
+            .header-info {
+                margin-top: 8px !important;
+                gap: 8px !important;
+            }
+            
+            .info-item {
+                padding: 3px 6px !important;
+                font-size: 8pt !important;
+            }
+            
+            /* Éviter les coupures de mots */
+            p, h1, h2, h3, h4, h5, h6, li, td, th {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                orphans: 3;
+                widows: 3;
+            }
+            
+            /* Éviter les coupures dans les paragraphes */
+            p {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+        
+        /* Modal pour les options d'impression */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: var(--radius);
+            width: 80%;
+            max-width: 450px;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .print-options {
+            margin-top: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .print-option {
+            margin-bottom: 12px;
+        }
+        
+        /* Responsive Design - Tablettes (écrans moyens) */
+        @media (max-width: 992px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .section-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .evaluation-preview {
+                padding: 15px;
+            }
+            
+            .preview-header {
+                padding: 15px;
+            }
+            
+            .top-action-buttons {
+                flex-wrap: wrap;
+            }
+            
+            .header-info {
+                gap: 8px;
+            }
+            
+            .info-item {
+                padding: 5px 8px;
+                font-size: 0.8rem;
+            }
+        }
+        
+        /* Responsive Design - Mobiles (écrans petits) */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 12px;
+            }
+            
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .app-description {
+                font-size: 0.85rem;
+            }
+            
+            .editor-panel, .preview-panel {
+                padding: 12px;
+            }
+            
+            .panel-title {
+                font-size: 1rem;
+            }
+            
+            .section-buttons {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+            
+            .section-buttons button {
+                height: 36px;
+                font-size: 0.75rem;
+            }
+            
+            .top-action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .header-info {
+                flex-direction: column;
+                gap: 6px;
+            }
+            
+            .info-item {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .evaluation-preview {
+                padding: 12px;
+            }
+            
+            .preview-header {
+                padding: 12px;
+            }
+            
+            .evaluation-title {
+                font-size: 1.4rem;
+            }
+            
+            .school-name {
+                font-size: 1rem;
+            }
+            
+            .watermark {
+                font-size: 2.5rem;
+            }
+            
+            .formatting-toolbar {
+                justify-content: center;
+            }
+            
+            /* Boutons plus compacts sur mobile */
+            button {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+                height: 32px;
+            }
+            
+            .btn-retour {
+                padding: 6px 10px;
+                height: 32px;
+            }
+        }
+        
+        /* Responsive Design - Très petits écrans */
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            
+            header {
+                padding: 10px;
+            }
+            
+            header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .editor-panel, .preview-panel {
+                padding: 10px;
+            }
+            
+            .content-block {
+                padding: 12px;
+            }
+            
+            .evaluation-title {
+                font-size: 1.2rem;
+            }
+            
+            .watermark {
+                font-size: 2rem;
+            }
+            
+            button {
+                padding: 5px 8px;
+                font-size: 0.75rem;
+                height: 30px;
+            }
+            
+            .btn-retour {
+                padding: 5px 8px;
+                height: 30px;
+            }
+            
+            .section-buttons button {
+                height: 32px;
+                font-size: 0.7rem;
+            }
+        }
+        
+        /* Adaptation pour les très grandes écrans */
+        @media (min-width: 1600px) {
+            .container {
+                max-width: 1600px;
+                grid-template-columns: 320px 1fr;
+                gap: 20px;
+            }
+            
+            .section-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .section-buttons button {
+                height: 44px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="btn-retour" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i> Retour
+    </button>
+    
+    <header>
+        <h1><i class="fas fa-file-alt"></i> Créateur de Fiches d'Évaluation</h1>
+        <p class="app-description">Application permettant aux enseignants de créer des évaluations, devoirs et travaux dirigés avec différents types de questions</p>
+    </header>
+    
+    <div class="container">
+        <div class="editor-panel">
+            <!-- Boutons d'action en haut -->
+            <div class="top-action-buttons">
+                <button class="btn-success" onclick="showPrintOptions()">
+                    <i class="fas fa-file-pdf"></i> Générer PDF
+                </button>
+                <button class="btn-info" onclick="printEvaluation()">
+                    <i class="fas fa-print"></i> Imprimer
+                </button>
+                <button class="btn-danger" onclick="resetEvaluation()">
+                    <i class="fas fa-trash"></i> Tout effacer
+                </button>
+            </div>
+            
+            <h2 class="panel-title"><i class="fas fa-edit"></i> Éditeur d'évaluation</h2>
+            
+            <div class="form-group">
+                <label for="school-name"><i class="fas fa-school"></i> Nom de l'établissement</label>
+                <input type="text" id="school-name" placeholder="Ex: Lycée Louis Pasteur">
+            </div>
+            
+            <div class="form-group">
+                <label for="teacher-name"><i class="fas fa-user-tie"></i> Nom de l'enseignant</label>
+                <input type="text" id="teacher-name" value="KOLA Maniwah Essohouna" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="subject"><i class="fas fa-book"></i> Matière</label>
+                <input type="text" id="subject" placeholder="Ex: Mathématiques">
+            </div>
+            
+            <div class="form-group">
+                <label for="class-name"><i class="fas fa-users"></i> Classe/Niveau</label>
+                <input type="text" id="class-name" placeholder="Ex: Seconde 7">
+            </div>
+            
+            <div class="form-group">
+                <label for="evaluation-title"><i class="fas fa-heading"></i> Titre de l'évaluation</label>
+                <input type="text" id="evaluation-title" placeholder="Ex: Devoir sur les fonctions">
+            </div>
+            
+            <div class="form-group">
+                <label for="evaluation-duration"><i class="fas fa-clock"></i> Durée de l'évaluation</label>
+                <input type="text" id="evaluation-duration" placeholder="Ex: 2 heures">
+            </div>
+            
+            <div class="form-group">
+                <label for="total-points"><i class="fas fa-star"></i> Total des points</label>
+                <input type="number" id="total-points" placeholder="Ex: 20">
+            </div>
+            
+            <h3 class="panel-title"><i class="fas fa-plus-circle"></i> Ajouter des sections</h3>
+            
+            <div class="section-buttons">
+                <button class="btn-info" onclick="addSection('instructions')">
+                    <i class="fas fa-info-circle"></i> Instructions
+                </button>
+                <button class="btn-success" onclick="addSection('qcm')">
+                    <i class="fas fa-check-square"></i> QCM
+                </button>
+                <button class="btn-success" onclick="addSection('truefalse')">
+                    <i class="fas fa-check-circle"></i> Vrai/Faux
+                </button>
+                <button class="btn-warning" onclick="addSection('fillblank')">
+                    <i class="fas fa-pencil-alt"></i> Questions à trous
+                </button>
+                <button class="btn-warning" onclick="addSection('traditional')">
+                    <i class="fas fa-question-circle"></i> Questions traditionnelles
+                </button>
+                <button class="btn-purple" onclick="addSection('problem')">
+                    <i class="fas fa-puzzle-piece"></i> Situation problème
+                </button>
+                <button class="btn-purple" onclick="addImageSection()">
+                    <i class="fas fa-image"></i> Image
+                </button>
+            </div>
+            
+            <div class="content-blocks" id="content-blocks">
+                <!-- Les blocs de contenu seront ajoutés ici dynamiquement -->
+            </div>
+        </div>
+        
+        <div class="preview-panel">
+            <h2 class="panel-title"><i class="fas fa-eye"></i> Aperçu de l'évaluation</h2>
+            
+            <div class="evaluation-preview" id="evaluation-preview">
+                <div class="preview-header">
+                    <div class="watermark" id="watermark">ÉVALUATION</div>
+                    <div class="school-name" id="preview-school">Nom de l'établissement</div>
+                    <h1 class="evaluation-title" id="preview-title">Titre de l'évaluation</h1>
+                    <p id="preview-subject">Matière: [Matière]</p>
+                    
+                    <div class="header-info">
+                        <div class="info-item">
+                            <i class="fas fa-user-tie"></i>
+                            <span id="preview-teacher">Enseignant: KOLA Maniwah Essohouna</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-users"></i>
+                            <span id="preview-class">Classe: [Classe]</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-clock"></i>
+                            <span id="preview-duration">Durée: [Durée]</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-star"></i>
+                            <span id="preview-points">Total: [Points] points</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="preview-content" id="preview-content">
+                    <p>Le contenu de votre évaluation apparaîtra ici.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour les options d'impression -->
+    <div id="printModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2><i class="fas fa-print"></i> Options d'export PDF</h2>
+            <div class="print-options">
+                <div class="print-option">
+                    <label for="pdfOrientation"><i class="fas fa-compress-alt"></i> Orientation de la page:</label>
+                    <select id="pdfOrientation">
+                        <option value="portrait">Portrait</option>
+                        <option value="landscape">Paysage</option>
+                    </select>
+                </div>
+                <div class="print-option">
+                    <label for="pdfFormat"><i class="fas fa-file"></i> Format de page:</label>
+                    <select id="pdfFormat">
+                        <option value="a4">A4</option>
+                        <option value="letter">Lettre</option>
+                        <option value="legal">Légal</option>
+                    </select>
+                </div>
+                <div class="print-option">
+                    <label for="includeAnswers"><i class="fas fa-check-circle"></i> Inclure les réponses:</label>
+                    <input type="checkbox" id="includeAnswers">
+                </div>
+                <div class="print-option">
+                    <label for="includeSolutions"><i class="fas fa-lightbulb"></i> Inclure les solutions détaillées:</label>
+                    <input type="checkbox" id="includeSolutions">
+                </div>
+                <div class="print-option">
+                    <label for="studentNameField"><i class="fas fa-user-graduate"></i> Ajouter un champ pour le nom de l'élève:</label>
+                    <input type="checkbox" id="studentNameField" checked>
+                </div>
+                <div class="print-option">
+                    <label for="watermarkText"><i class="fas fa-water"></i> Filigrane:</label>
+                    <input type="text" id="watermarkText" placeholder="Ex: CORRIGÉ" value="ÉVALUATION">
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-success" onclick="generatePDF()">
+                    <i class="fas fa-file-pdf"></i> Générer PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales pour la numérotation
+        let questionCounter = 0;
+        let subQuestionCounter = 0;
+        
+        // Initialisation des champs avec des valeurs par défaut
+        document.getElementById('school-name').value = 'Lycée Louis Pasteur';
+        document.getElementById('teacher-name').value = 'KOLA Maniwah Essohouna';
+        document.getElementById('subject').value = 'Mathématiques';
+        document.getElementById('class-name').value = 'Seconde 7';
+        document.getElementById('evaluation-title').value = 'Devoir sur les fonctions';
+        document.getElementById('evaluation-duration').value = '2 heures';
+        document.getElementById('total-points').value = '20';
+        
+        // Mise à jour de l'aperçu
+        updatePreview();
+        
+        // Fonction pour mettre à jour l'aperçu
+        function updatePreview() {
+            document.getElementById('preview-school').textContent = document.getElementById('school-name').value;
+            document.getElementById('preview-title').textContent = document.getElementById('evaluation-title').value;
+            document.getElementById('preview-subject').textContent = 'Matière: ' + document.getElementById('subject').value;
+            document.getElementById('preview-teacher').textContent = 'Enseignant: KOLA Maniwah Essohouna';
+            document.getElementById('preview-class').textContent = 'Classe: ' + document.getElementById('class-name').value;
+            document.getElementById('preview-duration').textContent = 'Durée: ' + document.getElementById('evaluation-duration').value;
+            document.getElementById('preview-points').textContent = 'Total: ' + document.getElementById('total-points').value + ' points';
+            document.getElementById('watermark').textContent = document.getElementById('watermarkText').value || 'ÉVALUATION';
+        }
+        
+        // Écouteurs d'événements pour la mise à jour en temps réel
+        document.getElementById('school-name').addEventListener('input', updatePreview);
+        document.getElementById('subject').addEventListener('input', updatePreview);
+        document.getElementById('class-name').addEventListener('input', updatePreview);
+        document.getElementById('evaluation-title').addEventListener('input', updatePreview);
+        document.getElementById('evaluation-duration').addEventListener('input', updatePreview);
+        document.getElementById('total-points').addEventListener('input', updatePreview);
+        document.getElementById('watermarkText').addEventListener('input', updatePreview);
+        
+        // Fonction pour ajouter une section
+        function addSection(type) {
+            const contentBlocks = document.getElementById('content-blocks');
+            const blockId = 'block-' + Date.now();
+            
+            let blockHTML = '';
+            
+            switch(type) {
+                case 'instructions':
+                    blockHTML = `
+                        <div class="content-block" id="${blockId}">
+                            <div class="block-header">
+                                <div class="block-title"><i class="fas fa-info-circle"></i> Instructions</div>
+                                <div class="block-actions">
+                                    <button class="btn-danger" onclick="removeBlock('${blockId}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-text">Instructions</label>
+                                <div class="formatting-toolbar" id="toolbar-${blockId}">
+                                    <button class="format-btn" title="Gras" onclick="applyFormat('${blockId}', 'bold')">
+                                        <i class="fas fa-bold"></i>
+                                    </button>
+                                    <button class="format-btn" title="Italique" onclick="applyFormat('${blockId}', 'italic')">
+                                        <i class="fas fa-italic"></i>
+                                    </button>
+                                    <button class="format-btn" title="Souligné" onclick="applyFormat('${blockId}', 'underline')">
+                                        <i class="fas fa-underline"></i>
+                                    </button>
+                                    <button class="format-btn" title="Liste à puces" onclick="applyFormat('${blockId}', 'insertUnorderedList')">
+                                        <i class="fas fa-list-ul"></i>
+                                    </button>
+                                    <button class="format-btn" title="Liste numérotée" onclick="applyFormat('${blockId}', 'insertOrderedList')">
+                                        <i class="fas fa-list-ol"></i>
+                                    </button>
+                                </div>
+                                <div id="editor-${blockId}" class="rich-text-editor" contenteditable="true" 
+                                     oninput="updatePreviewContent()" 
+                                     placeholder="Entrez les instructions pour cette section...">
+                                    Entrez les instructions pour cette section...
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'qcm':
+                    blockHTML = `
+                        <div class="content-block" id="${blockId}">
+                            <div class="block-header">
+                                <div class="block-title"><i class="fas fa-check-square"></i> Question à Choix Multiple</div>
+                                <div class="block-actions">
+                                    <button class="btn-danger" onclick="removeBlock('${blockId}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-question">Question</label>
+                                <div class="formatting-toolbar" id="toolbar-${blockId}">
+                                    <button class="format-btn" title="Gras" onclick="applyFormat('${blockId}', 'bold')">
+                                        <i class="fas fa-bold"></i>
+                                    </button>
+                                    <button class="format-btn" title="Italique" onclick="applyFormat('${blockId}', 'italic')">
+                                        <i class="fas fa-italic"></i>
+                                    </button>
+                                    <button class="format-btn" title="Souligné" onclick="applyFormat('${blockId}', 'underline')">
+                                        <i class="fas fa-underline"></i>
+                                    </button>
+                                </div>
+                                <div id="editor-${blockId}" class="rich-text-editor" contenteditable="true" 
+                                     oninput="updatePreviewContent()" 
+                                     placeholder="Entrez la question...">
+                                    Entrez la question...
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-points">Points</label>
+                                <input type="number" id="${blockId}-points" placeholder="Ex: 2" oninput="updatePreviewContent()">
+                            </div>
+                            <div class="form-group">
+                                <label>Options de réponse</label>
+                                <div id="${blockId}-options">
+                                    <div class="option-item">
+                                        <input type="radio" name="${blockId}-correct" value="0" checked>
+                                        <input type="text" placeholder="Option 1" oninput="updatePreviewContent()">
+                                        <button class="btn-danger" onclick="removeOption(this)"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div class="option-item">
+                                        <input type="radio" name="${blockId}-correct" value="1">
+                                        <input type="text" placeholder="Option 2" oninput="updatePreviewContent()">
+                                        <button class="btn-danger" onclick="removeOption(this)"><i class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+                                <button class="btn-info" onclick="addOption('${blockId}')"><i class="fas fa-plus"></i> Ajouter une option</button>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-solution">Solution détaillée (optionnelle)</label>
+                                <textarea id="${blockId}-solution" placeholder="Entrez une explication détaillée de la réponse..." oninput="updatePreviewContent()"></textarea>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'truefalse':
+                    blockHTML = `
+                        <div class="content-block" id="${blockId}">
+                            <div class="block-header">
+                                <div class="block-title"><i class="fas fa-check-circle"></i> Question Vrai/Faux</div>
+                                <div class="block-actions">
+                                    <button class="btn-danger" onclick="removeBlock('${blockId}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-question">Question</label>
+                                <div class="formatting-toolbar" id="toolbar-${blockId}">
+                                    <button class="format-btn" title="Gras" onclick="applyFormat('${blockId}', 'bold')">
+                                        <i class="fas fa-bold"></i>
+                                    </button>
+                                    <button class="format-btn" title="Italique" onclick="applyFormat('${blockId}', 'italic')">
+                                        <i class="fas fa-italic"></i>
+                                    </button>
+                                    <button class="format-btn" title="Souligné" onclick="applyFormat('${blockId}', 'underline')">
+                                        <i class="fas fa-underline"></i>
+                                    </button>
+                                </div>
+                                <div id="editor-${blockId}" class="rich-text-editor" contenteditable="true" 
+                                     oninput="updatePreviewContent()" 
+                                     placeholder="Entrez la question...">
+                                    Entrez la question...
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-points">Points</label>
+                                <input type="number" id="${blockId}-points" placeholder="Ex: 1" oninput="updatePreviewContent()">
+                            </div>
+                            <div class="form-group">
+                                <label>Réponse correcte</label>
+                                <div>
+                                    <input type="radio" id="${blockId}-true" name="${blockId}-answer" value="true" checked>
+                                    <label for="${blockId}-true">Vrai</label>
+                                    <input type="radio" id="${blockId}-false" name="${blockId}-answer" value="false">
+                                    <label for="${blockId}-false">Faux</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-solution">Solution détaillée (optionnelle)</label>
+                                <textarea id="${blockId}-solution" placeholder="Entrez une explication détaillée de la réponse..." oninput="updatePreviewContent()"></textarea>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'fillblank':
+                    blockHTML = `
+                        <div class="content-block" id="${blockId}">
+                            <div class="block-header">
+                                <div class="block-title"><i class="fas fa-pencil-alt"></i> Question à Trous</div>
+                                <div class="block-actions">
+                                    <button class="btn-danger" onclick="removeBlock('${blockId}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-question">Texte avec des trous (utilisez [ ] pour marquer les trous)</label>
+                                <div class="formatting-toolbar" id="toolbar-${blockId}">
+                                    <button class="format-btn" title="Gras" onclick="applyFormat('${blockId}', 'bold')">
+                                        <i class="fas fa-bold"></i>
+                                    </button>
+                                    <button class="format-btn" title="Italique" onclick="applyFormat('${blockId}', 'italic')">
+                                        <i class="fas fa-italic"></i>
+                                    </button>
+                                    <button class="format-btn" title="Souligné" onclick="applyFormat('${blockId}', 'underline')">
+                                        <i class="fas fa-underline"></i>
+                                    </button>
+                                </div>
+                                <div id="editor-${blockId}" class="rich-text-editor" contenteditable="true" 
+                                     oninput="updatePreviewContent()" 
+                                     placeholder="Ex: La capitale de la France est [Paris].">
+                                    Ex: La capitale de la France est [Paris].
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-points">Points</label>
+                                <input type="number" id="${blockId}-points" placeholder="Ex: 3" oninput="updatePreviewContent()">
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-solution">Solution détaillée (optionnelle)</label>
+                                <textarea id="${blockId}-solution" placeholder="Entrez une explication détaillée de la réponse..." oninput="updatePreviewContent()"></textarea>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'traditional':
+                    blockHTML = `
+                        <div class="content-block" id="${blockId}">
+                            <div class="block-header">
+                                <div class="block-title"><i class="fas fa-question-circle"></i> Question Traditionnelle</div>
+                                <div class="block-actions">
+                                    <button class="btn-danger" onclick="removeBlock('${blockId}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-question">Question</label>
+                                <div class="formatting-toolbar" id="toolbar-${blockId}">
+                                    <button class="format-btn" title="Gras" onclick="applyFormat('${blockId}', 'bold')">
+                                        <i class="fas fa-bold"></i>
+                                    </button>
+                                    <button class="format-btn" title="Italique" onclick="applyFormat('${blockId}', 'italic')">
+                                        <i class="fas fa-italic"></i>
+                                    </button>
+                                    <button class="format-btn" title="Souligné" onclick="applyFormat('${blockId}', 'underline')">
+                                        <i class="fas fa-underline"></i>
+                                    </button>
+                                    <button class="format-btn" title="Liste à puces" onclick="applyFormat('${blockId}', 'insertUnorderedList')">
+                                        <i class="fas fa-list-ul"></i>
+                                    </button>
+                                    <button class="format-btn" title="Liste numérotée" onclick="applyFormat('${blockId}', 'insertOrderedList')">
+                                        <i class="fas fa-list-ol"></i>
+                                    </button>
+                                </div>
+                                <div id="editor-${blockId}" class="rich-text-editor" contenteditable="true" 
+                                     oninput="updatePreviewContent()" 
+                                     placeholder="Entrez la question...">
+                                    Entrez la question...
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-points">Points</label>
+                                <input type="number" id="${blockId}-points" placeholder="Ex: 5" oninput="updatePreviewContent()">
+                            </div>
+                            <div class="form-group">
+                                <button class="btn-info" onclick="addSubQuestion('${blockId}')">
+                                    <i class="fas fa-plus"></i> Ajouter une sous-question
+                                </button>
+                            </div>
+                            <div id="${blockId}-subquestions">
+                                <!-- Sous-questions seront ajoutées ici -->
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-solution">Solution détaillée (optionnelle)</label>
+                                <textarea id="${blockId}-solution" placeholder="Entrez la réponse attendue..." oninput="updatePreviewContent()"></textarea>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'problem':
+                    blockHTML = `
+                        <div class="content-block" id="${blockId}">
+                            <div class="block-header">
+                                <div class="block-title"><i class="fas fa-puzzle-piece"></i> Situation Problème</div>
+                                <div class="block-actions">
+                                    <button class="btn-danger" onclick="removeBlock('${blockId}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-context">Contexte du problème</label>
+                                <div class="formatting-toolbar" id="toolbar-${blockId}">
+                                    <button class="format-btn" title="Gras" onclick="applyFormat('${blockId}', 'bold')">
+                                        <i class="fas fa-bold"></i>
+                                    </button>
+                                    <button class="format-btn" title="Italique" onclick="applyFormat('${blockId}', 'italic')">
+                                        <i class="fas fa-italic"></i>
+                                    </button>
+                                    <button class="format-btn" title="Souligné" onclick="applyFormat('${blockId}', 'underline')">
+                                        <i class="fas fa-underline"></i>
+                                    </button>
+                                    <button class="format-btn" title="Liste à puces" onclick="applyFormat('${blockId}', 'insertUnorderedList')">
+                                        <i class="fas fa-list-ul"></i>
+                                    </button>
+                                    <button class="format-btn" title="Liste numérotée" onclick="applyFormat('${blockId}', 'insertOrderedList')">
+                                        <i class="fas fa-list-ol"></i>
+                                    </button>
+                                </div>
+                                <div id="editor-${blockId}" class="rich-text-editor" contenteditable="true" 
+                                     oninput="updatePreviewContent()" 
+                                     placeholder="Décrivez la situation problème...">
+                                    Décrivez la situation problème...
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-question">Question principale</label>
+                                <div class="formatting-toolbar" id="toolbar-${blockId}-question">
+                                    <button class="format-btn" title="Gras" onclick="applyFormat('${blockId}-question', 'bold')">
+                                        <i class="fas fa-bold"></i>
+                                    </button>
+                                    <button class="format-btn" title="Italique" onclick="applyFormat('${blockId}-question', 'italic')">
+                                        <i class="fas fa-italic"></i>
+                                    </button>
+                                    <button class="format-btn" title="Souligné" onclick="applyFormat('${blockId}-question', 'underline')">
+                                        <i class="fas fa-underline"></i>
+                                    </button>
+                                </div>
+                                <div id="editor-${blockId}-question" class="rich-text-editor" contenteditable="true" 
+                                     oninput="updatePreviewContent()" 
+                                     placeholder="Entrez la question principale...">
+                                    Entrez la question principale...
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-points">Points</label>
+                                <input type="number" id="${blockId}-points" placeholder="Ex: 10" oninput="updatePreviewContent()">
+                            </div>
+                            <div class="form-group">
+                                <button class="btn-info" onclick="addSubQuestion('${blockId}')">
+                                    <i class="fas fa-plus"></i> Ajouter une sous-question
+                                </button>
+                            </div>
+                            <div id="${blockId}-subquestions">
+                                <!-- Sous-questions seront ajoutées ici -->
+                            </div>
+                            <div class="form-group">
+                                <label for="${blockId}-solution">Solution détaillée (optionnelle)</label>
+                                <textarea id="${blockId}-solution" placeholder="Entrez la solution détaillée..." oninput="updatePreviewContent()"></textarea>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            contentBlocks.insertAdjacentHTML('beforeend', blockHTML);
+            updatePreviewContent();
+        }
+        
+        // Fonction pour appliquer le formatage de texte
+        function applyFormat(blockId, format) {
+            const editor = document.getElementById(`editor-${blockId}`);
+            editor.focus();
+            document.execCommand(format, false, null);
+            updatePreviewContent();
+        }
+        
+        // Fonction pour ajouter une sous-question
+        function addSubQuestion(blockId) {
+            const subQuestionsContainer = document.getElementById(`${blockId}-subquestions`);
+            const subQuestionId = `subq-${Date.now()}`;
+            
+            const subQuestionHTML = `
+                <div class="form-group subquestion-editor" id="${subQuestionId}">
+                    <div class="block-header">
+                        <div class="block-title"><i class="fas fa-question"></i> Sous-question</div>
+                        <div class="block-actions">
+                            <button class="btn-danger" onclick="removeSubQuestion('${subQuestionId}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="formatting-toolbar" id="toolbar-${subQuestionId}">
+                        <button class="format-btn" title="Gras" onclick="applyFormat('${subQuestionId}', 'bold')">
+                            <i class="fas fa-bold"></i>
+                        </button>
+                        <button class="format-btn" title="Italique" onclick="applyFormat('${subQuestionId}', 'italic')">
+                            <i class="fas fa-italic"></i>
+                        </button>
+                        <button class="format-btn" title="Souligné" onclick="applyFormat('${subQuestionId}', 'underline')">
+                            <i class="fas fa-underline"></i>
+                        </button>
+                    </div>
+                    <div id="editor-${subQuestionId}" class="rich-text-editor" contenteditable="true" 
+                         oninput="updatePreviewContent()" 
+                         placeholder="Entrez la sous-question...">
+                        Entrez la sous-question...
+                    </div>
+                    <div class="form-group">
+                        <label for="${subQuestionId}-points">Points pour cette sous-question</label>
+                        <input type="number" id="${subQuestionId}-points" placeholder="Ex: 2" oninput="updatePreviewContent()">
+                    </div>
+                </div>
+            `;
+            
+            subQuestionsContainer.insertAdjacentHTML('beforeend', subQuestionHTML);
+            updatePreviewContent();
+        }
+        
+        // Fonction pour supprimer une sous-question
+        function removeSubQuestion(subQuestionId) {
+            document.getElementById(subQuestionId).remove();
+            updatePreviewContent();
+        }
+        
+        // Fonction pour ajouter une section image
+        function addImageSection() {
+            const contentBlocks = document.getElementById('content-blocks');
+            const blockId = 'block-' + Date.now();
+            
+            const blockHTML = `
+                <div class="content-block" id="${blockId}">
+                    <div class="block-header">
+                        <div class="block-title"><i class="fas fa-image"></i> Image</div>
+                        <div class="block-actions">
+                            <button class="btn-danger" onclick="removeBlock('${blockId}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="${blockId}-image">Sélectionner une image</label>
+                        <input type="file" id="${blockId}-image" accept="image/*" onchange="previewImage(this, '${blockId}')">
+                    </div>
+                    <div class="form-group">
+                        <label for="${blockId}-caption">Légende (optionnelle)</label>
+                        <input type="text" id="${blockId}-caption" placeholder="Entrez une légende pour l'image..." oninput="updatePreviewContent()">
+                    </div>
+                    <img id="${blockId}-preview" class="image-preview">
+                </div>
+            `;
+            
+            contentBlocks.insertAdjacentHTML('beforeend', blockHTML);
+        }
+        
+        // Fonction pour prévisualiser une image
+        function previewImage(input, blockId) {
+            const preview = document.getElementById(`${blockId}-preview`);
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                updatePreviewContent();
+            }
+            
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Fonction pour ajouter une option à une question QCM
+        function addOption(blockId) {
+            const optionsContainer = document.getElementById(`${blockId}-options`);
+            const optionCount = optionsContainer.children.length;
+            
+            const optionHTML = `
+                <div class="option-item">
+                    <input type="radio" name="${blockId}-correct" value="${optionCount}">
+                    <input type="text" placeholder="Option ${optionCount + 1}" oninput="updatePreviewContent()">
+                    <button class="btn-danger" onclick="removeOption(this)"><i class="fas fa-times"></i></button>
+                </div>
+            `;
+            
+            optionsContainer.insertAdjacentHTML('beforeend', optionHTML);
+        }
+        
+        // Fonction pour supprimer une option
+        function removeOption(button) {
+            button.parentElement.remove();
+            updatePreviewContent();
+        }
+        
+        // Fonction pour supprimer un bloc
+        function removeBlock(blockId) {
+            document.getElementById(blockId).remove();
+            updatePreviewContent();
+        }
+        
+        // Fonction pour mettre à jour le contenu de l'aperçu
+        function updatePreviewContent() {
+            const previewContent = document.getElementById('preview-content');
+            let contentHTML = '';
+            
+            // Réinitialiser les compteurs
+            questionCounter = 0;
+            
+            // Récupérer tous les blocs de contenu
+            const contentBlocks = document.getElementById('content-blocks').children;
+            
+            for (let block of contentBlocks) {
+                const blockId = block.id;
+                
+                // Instructions
+                if (block.querySelector('.fa-info-circle')) {
+                    const editor = document.getElementById(`editor-${blockId}`);
+                    const text = editor.innerHTML;
+                    if (text && text !== 'Entrez les instructions pour cette section...') {
+                        contentHTML += `
+                            <div class="content-section">
+                                <div class="instructions">
+                                    <h3 class="section-title"><i class="fas fa-info-circle"></i> Instructions</h3>
+                                    <div class="question-text">${text}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // QCM
+                else if (block.querySelector('.fa-check-square')) {
+                    const editor = document.getElementById(`editor-${blockId}`);
+                    const question = editor.innerHTML;
+                    const points = document.getElementById(`${blockId}-points`).value;
+                    const solution = document.getElementById(`${blockId}-solution`).value;
+                    
+                    if (question && question !== 'Entrez la question...') {
+                        questionCounter++;
+                        let optionsHTML = '';
+                        const options = document.getElementById(`${blockId}-options`).children;
+                        
+                        for (let i = 0; i < options.length; i++) {
+                            const optionText = options[i].querySelector('input[type="text"]').value;
+                            if (optionText) {
+                                const letter = String.fromCharCode(97 + i); // a, b, c, ...
+                                optionsHTML += `
+                                    <div class="option-item">
+                                        <input type="radio" name="${blockId}-answer" id="${blockId}-preview-option${i}">
+                                        <label for="${blockId}-preview-option${i}">
+                                            <span class="subquestion-letter">${letter})</span> ${optionText}
+                                        </label>
+                                    </div>
+                                `;
+                            }
+                        }
+                        
+                        contentHTML += `
+                            <div class="content-section">
+                                <div class="qcm">
+                                    <div class="question-text">
+                                        <span class="question-number">${questionCounter}.</span>
+                                        ${question}
+                                    </div>
+                                    <div class="options-container">
+                                        ${optionsHTML}
+                                    </div>
+                                    ${points ? `<div class="question-points"><i class="fas fa-star"></i> ${points} point(s)</div>` : ''}
+                                    ${solution ? `
+                                        <div class="solution-toggle" onclick="toggleSolution('${blockId}-solution')">
+                                            <i class="fas fa-lightbulb"></i> Voir la solution
+                                        </div>
+                                        <div class="solution-content" id="${blockId}-solution">
+                                            <div class="solution-title"><i class="fas fa-check-circle"></i> Solution</div>
+                                            <p>${solution}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Vrai/Faux
+                else if (block.querySelector('.fa-check-circle')) {
+                    const editor = document.getElementById(`editor-${blockId}`);
+                    const question = editor.innerHTML;
+                    const points = document.getElementById(`${blockId}-points`).value;
+                    const solution = document.getElementById(`${blockId}-solution`).value;
+                    const isTrue = document.getElementById(`${blockId}-true`).checked;
+                    
+                    if (question && question !== 'Entrez la question...') {
+                        questionCounter++;
+                        
+                        contentHTML += `
+                            <div class="content-section">
+                                <div class="truefalse">
+                                    <div class="question-text">
+                                        <span class="question-number">${questionCounter}.</span>
+                                        ${question}
+                                    </div>
+                                    <div class="options-container">
+                                        <div class="option-item">
+                                            <input type="radio" name="${blockId}-answer" id="${blockId}-preview-true" value="true">
+                                            <label for="${blockId}-preview-true">Vrai</label>
+                                        </div>
+                                        <div class="option-item">
+                                            <input type="radio" name="${blockId}-answer" id="${blockId}-preview-false" value="false">
+                                            <label for="${blockId}-preview-false">Faux</label>
+                                        </div>
+                                    </div>
+                                    ${points ? `<div class="question-points"><i class="fas fa-star"></i> ${points} point(s)</div>` : ''}
+                                    ${solution ? `
+                                        <div class="solution-toggle" onclick="toggleSolution('${blockId}-solution')">
+                                            <i class="fas fa-lightbulb"></i> Voir la solution
+                                        </div>
+                                        <div class="solution-content" id="${blockId}-solution">
+                                            <div class="solution-title"><i class="fas fa-check-circle"></i> Solution</div>
+                                            <p>Réponse correcte: ${isTrue ? 'Vrai' : 'Faux'}</p>
+                                            <p>${solution}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Questions à trous
+                else if (block.querySelector('.fa-pencil-alt')) {
+                    const editor = document.getElementById(`editor-${blockId}`);
+                    let question = editor.innerHTML;
+                    const points = document.getElementById(`${blockId}-points`).value;
+                    const solution = document.getElementById(`${blockId}-solution`).value;
+                    
+                    if (question && question !== 'Ex: La capitale de la France est [Paris].') {
+                        questionCounter++;
+                        // Remplacer [texte] par des champs vides pour l'aperçu
+                        const previewText = question.replace(/\[(.*?)\]/g, '<span class="blank-input">__________</span>');
+                        
+                        contentHTML += `
+                            <div class="content-section">
+                                <div class="fillblank">
+                                    <div class="question-text">
+                                        <span class="question-number">${questionCounter}.</span>
+                                        ${previewText}
+                                    </div>
+                                    ${points ? `<div class="question-points"><i class="fas fa-star"></i> ${points} point(s)</div>` : ''}
+                                    ${solution ? `
+                                        <div class="solution-toggle" onclick="toggleSolution('${blockId}-solution')">
+                                            <i class="fas fa-lightbulb"></i> Voir la solution
+                                        </div>
+                                        <div class="solution-content" id="${blockId}-solution">
+                                            <div class="solution-title"><i class="fas fa-check-circle"></i> Solution</div>
+                                            <p>${solution}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Questions traditionnelles
+                else if (block.querySelector('.fa-question-circle')) {
+                    const editor = document.getElementById(`editor-${blockId}`);
+                    const question = editor.innerHTML;
+                    const points = document.getElementById(`${blockId}-points`).value;
+                    const solution = document.getElementById(`${blockId}-solution`).value;
+                    const subQuestionsContainer = document.getElementById(`${blockId}-subquestions`);
+                    
+                    if ((question && question !== 'Entrez la question...') || subQuestionsContainer.children.length > 0) {
+                        questionCounter++;
+                        
+                        let subQuestionsHTML = '';
+                        if (subQuestionsContainer.children.length > 0) {
+                            subQuestionsHTML += '<div class="subquestions-container">';
+                            const subQuestions = subQuestionsContainer.children;
+                            
+                            for (let i = 0; i < subQuestions.length; i++) {
+                                const subQuestion = subQuestions[i];
+                                const subEditor = document.getElementById(`editor-${subQuestion.id}`);
+                                const subPoints = document.getElementById(`${subQuestion.id}-points`).value;
+                                
+                                if (subEditor && subEditor.innerHTML !== 'Entrez la sous-question...') {
+                                    const letter = String.fromCharCode(97 + i); // a, b, c, ...
+                                    subQuestionsHTML += `
+                                        <div class="subquestion">
+                                            <div class="question-text">
+                                                <span class="subquestion-letter">${letter}.</span>
+                                                ${subEditor.innerHTML}
+                                            </div>
+                                            ${subPoints ? `<div class="question-points" style="font-size: 0.8rem;"><i class="fas fa-star"></i> ${subPoints} point(s)</div>` : ''}
+                                            <div style="height: 60px; border-bottom: 1px solid #ccc; margin: 10px 0;"></div>
+                                        </div>
+                                    `;
+                                }
+                            }
+                            subQuestionsHTML += '</div>';
+                        }
+                        
+                        contentHTML += `
+                            <div class="content-section">
+                                <div class="traditional">
+                                    ${question && question !== 'Entrez la question...' ? `
+                                        <div class="question-text">
+                                            <span class="question-number">${questionCounter}.</span>
+                                            ${question}
+                                        </div>
+                                    ` : ''}
+                                    ${subQuestionsHTML}
+                                    ${!subQuestionsHTML && question && question !== 'Entrez la question...' ? `
+                                        <div style="height: 100px; border-bottom: 1px solid #ccc; margin: 15px 0;"></div>
+                                    ` : ''}
+                                    ${points ? `<div class="question-points"><i class="fas fa-star"></i> ${points} point(s)</div>` : ''}
+                                    ${solution ? `
+                                        <div class="solution-toggle" onclick="toggleSolution('${blockId}-solution')">
+                                            <i class="fas fa-lightbulb"></i> Voir la solution
+                                        </div>
+                                        <div class="solution-content" id="${blockId}-solution">
+                                            <div class="solution-title"><i class="fas fa-check-circle"></i> Solution</div>
+                                            <p>${solution}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Situation problème
+                else if (block.querySelector('.fa-puzzle-piece')) {
+                    const contextEditor = document.getElementById(`editor-${blockId}`);
+                    const questionEditor = document.getElementById(`editor-${blockId}-question`);
+                    const context = contextEditor.innerHTML;
+                    const question = questionEditor.innerHTML;
+                    const points = document.getElementById(`${blockId}-points`).value;
+                    const solution = document.getElementById(`${blockId}-solution`).value;
+                    const subQuestionsContainer = document.getElementById(`${blockId}-subquestions`);
+                    
+                    if ((context && context !== 'Décrivez la situation problème...') || 
+                        (question && question !== 'Entrez la question principale...') || 
+                        subQuestionsContainer.children.length > 0) {
+                        questionCounter++;
+                        
+                        let subQuestionsHTML = '';
+                        if (subQuestionsContainer.children.length > 0) {
+                            subQuestionsHTML += '<div class="subquestions-container">';
+                            const subQuestions = subQuestionsContainer.children;
+                            
+                            for (let i = 0; i < subQuestions.length; i++) {
+                                const subQuestion = subQuestions[i];
+                                const subEditor = document.getElementById(`editor-${subQuestion.id}`);
+                                const subPoints = document.getElementById(`${subQuestion.id}-points`).value;
+                                
+                                if (subEditor && subEditor.innerHTML !== 'Entrez la sous-question...') {
+                                    const letter = String.fromCharCode(97 + i); // a, b, c, ...
+                                    subQuestionsHTML += `
+                                        <div class="subquestion">
+                                            <div class="question-text">
+                                                <span class="subquestion-letter">${letter}.</span>
+                                                ${subEditor.innerHTML}
+                                            </div>
+                                            ${subPoints ? `<div class="question-points" style="font-size: 0.8rem;"><i class="fas fa-star"></i> ${subPoints} point(s)</div>` : ''}
+                                            <div style="height: 80px; border-bottom: 1px solid #ccc; margin: 12px 0;"></div>
+                                        </div>
+                                    `;
+                                }
+                            }
+                            subQuestionsHTML += '</div>';
+                        }
+                        
+                        contentHTML += `
+                            <div class="content-section">
+                                <div class="problem">
+                                    ${context && context !== 'Décrivez la situation problème...' ? `
+                                        <div class="question-text">${context}</div>
+                                    ` : ''}
+                                    ${question && question !== 'Entrez la question principale...' ? `
+                                        <div class="question-text">
+                                            <span class="question-number">${questionCounter}.</span>
+                                            ${question}
+                                        </div>
+                                    ` : ''}
+                                    ${subQuestionsHTML}
+                                    ${!subQuestionsHTML && (question && question !== 'Entrez la question principale...') ? `
+                                        <div style="height: 150px; border-bottom: 1px solid #ccc; margin: 15px 0;"></div>
+                                    ` : ''}
+                                    ${points ? `<div class="question-points"><i class="fas fa-star"></i> ${points} point(s)</div>` : ''}
+                                    ${solution ? `
+                                        <div class="solution-toggle" onclick="toggleSolution('${blockId}-solution')">
+                                            <i class="fas fa-lightbulb"></i> Voir la solution
+                                        </div>
+                                        <div class="solution-content" id="${blockId}-solution">
+                                            <div class="solution-title"><i class="fas fa-check-circle"></i> Solution</div>
+                                            <p>${solution}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Image
+                else if (block.querySelector('.fa-image')) {
+                    const preview = document.getElementById(`${blockId}-preview`);
+                    const caption = document.getElementById(`${blockId}-caption`).value;
+                    
+                    if (preview.style.display !== 'none') {
+                        contentHTML += `
+                            <div class="content-section">
+                                <img src="${preview.src}" class="preview-image">
+                                ${caption ? `<p style="text-align: center; font-style: italic;">${caption}</p>` : ''}
+                            </div>
+                        `;
+                    }
+                }
+            }
+            
+            previewContent.innerHTML = contentHTML || '<p>Le contenu de votre évaluation apparaîtra ici.</p>';
+        }
+        
+        // Fonction pour afficher/masquer les solutions
+        function toggleSolution(solutionId) {
+            const solutionContent = document.getElementById(solutionId);
+            if (solutionContent.style.display === 'block') {
+                solutionContent.style.display = 'none';
+            } else {
+                solutionContent.style.display = 'block';
+            }
+        }
+        
+        // Fonction pour afficher les options d'impression
+        function showPrintOptions() {
+            document.getElementById('printModal').style.display = 'block';
+        }
+        
+        // Fonction pour fermer la modal
+        function closeModal() {
+            document.getElementById('printModal').style.display = 'none';
+        }
+        
+        // Fonction pour générer un PDF avec gestion des coupures
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: document.getElementById('pdfOrientation').value,
+                unit: 'mm',
+                format: document.getElementById('pdfFormat').value
+            });
+            
+            // Récupérer le contenu de l'aperçu
+            const previewElement = document.getElementById('evaluation-preview');
+            
+            // Afficher toutes les solutions si demandé
+            const includeSolutions = document.getElementById('includeSolutions').checked;
+            if (includeSolutions) {
+                const solutionToggles = previewElement.querySelectorAll('.solution-toggle');
+                solutionToggles.forEach(toggle => {
+                    const solutionId = toggle.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    document.getElementById(solutionId).style.display = 'block';
+                });
+            }
+            
+            // Ajouter un champ pour le nom de l'élève si demandé
+            const studentNameField = document.getElementById('studentNameField').checked;
+            if (studentNameField) {
+                const studentField = document.createElement('div');
+                studentField.innerHTML = `
+                    <div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                        <p><strong>Nom et prénom de l'élève:</strong> _________________________________</p>
+                    </div>
+                `;
+                previewElement.insertBefore(studentField, previewElement.firstChild);
+            }
+            
+            // Appliquer des styles CSS pour éviter les coupures
+            const originalStyles = previewElement.getAttribute('style') || '';
+            previewElement.setAttribute('style', originalStyles + '; page-break-inside: avoid; break-inside: avoid;');
+            
+            // Générer le PDF
+            html2canvas(previewElement, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                onclone: function(clonedDoc) {
+                    // Appliquer les styles d'évitement de coupure sur le clone
+                    const clonedPreview = clonedDoc.getElementById('evaluation-preview');
+                    if (clonedPreview) {
+                        clonedPreview.style.pageBreakInside = 'avoid';
+                        clonedPreview.style.breakInside = 'avoid';
+                        
+                        // Appliquer aux sections individuelles
+                        const sections = clonedPreview.querySelectorAll('.content-section, .qcm, .truefalse, .fillblank, .traditional, .problem, .instructions, .solution, .preview-image');
+                        sections.forEach(section => {
+                            section.style.pageBreakInside = 'avoid';
+                            section.style.breakInside = 'avoid';
+                        });
+                    }
+                }
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = doc.internal.pageSize.getWidth();
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                // Ajouter la première page
+                doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                // Ajouter des pages supplémentaires si nécessaire
+                let heightLeft = imgHeight;
+                let position = 0;
+                let pageCount = 1;
+                
+                while (heightLeft > 0) {
+                    position = heightLeft - doc.internal.pageSize.getHeight();
+                    if (position > 0) {
+                        doc.addPage();
+                        pageCount++;
+                        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= doc.internal.pageSize.getHeight();
+                    } else {
+                        heightLeft = 0;
+                    }
+                }
+                
+                // Nom du fichier
+                const fileName = `evaluation_${document.getElementById('evaluation-title').value.replace(/\s+/g, '_')}.pdf`;
+                doc.save(fileName);
+                
+                // Restaurer l'état initial
+                if (studentNameField) {
+                    previewElement.removeChild(previewElement.firstChild);
+                }
+                
+                if (includeSolutions) {
+                    const solutionContents = previewElement.querySelectorAll('.solution-content');
+                    solutionContents.forEach(content => {
+                        content.style.display = 'none';
+                    });
+                }
+                
+                // Restaurer les styles originaux
+                previewElement.setAttribute('style', originalStyles);
+                
+                closeModal();
+            });
+        }
+        
+        // Fonction pour imprimer l'évaluation avec gestion des coupures
+        function printEvaluation() {
+            // Afficher toutes les solutions
+            const solutionToggles = document.querySelectorAll('.solution-toggle');
+            solutionToggles.forEach(toggle => {
+                const solutionId = toggle.getAttribute('onclick').match(/'([^']+)'/)[1];
+                document.getElementById(solutionId).style.display = 'block';
+            });
+            
+            // Appliquer des styles pour éviter les coupures
+            const previewElement = document.getElementById('evaluation-preview');
+            const originalStyles = previewElement.getAttribute('style') || '';
+            previewElement.setAttribute('style', originalStyles + '; page-break-inside: avoid; break-inside: avoid;');
+            
+            // Appliquer aux sections individuelles
+            const sections = previewElement.querySelectorAll('.content-section, .qcm, .truefalse, .fillblank, .traditional, .problem, .instructions, .solution, .preview-image');
+            sections.forEach(section => {
+                const sectionOriginalStyles = section.getAttribute('style') || '';
+                section.setAttribute('style', sectionOriginalStyles + '; page-break-inside: avoid; break-inside: avoid;');
+            });
+            
+            // Imprimer
+            window.print();
+            
+            // Restaurer l'état initial après impression
+            setTimeout(() => {
+                const solutionContents = document.querySelectorAll('.solution-content');
+                solutionContents.forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                // Restaurer les styles originaux
+                previewElement.setAttribute('style', originalStyles);
+                sections.forEach(section => {
+                    section.setAttribute('style', section.getAttribute('style').replace(/; page-break-inside: avoid; break-inside: avoid;/, ''));
+                });
+            }, 500);
+        }
+        
+        // Fonction pour réinitialiser l'évaluation
+        function resetEvaluation() {
+            if (confirm('Êtes-vous sûr de vouloir effacer toute l\'évaluation ?')) {
+                document.getElementById('content-blocks').innerHTML = '';
+                updatePreviewContent();
+            }
+        }
+        
+        // Fermer la modal si on clique en dehors
+        window.onclick = function(event) {
+            const modal = document.getElementById('printModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
