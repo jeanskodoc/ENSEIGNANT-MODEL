@@ -362,6 +362,21 @@
             width: auto;
         }
         
+        .discourse-flow {
+            background-color: #e8f4fc;
+            border-left: 4px solid var(--secondary-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .transition-phrase {
+            font-style: italic;
+            color: var(--secondary-color);
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        
         @media print {
             .form-section, .button-group, .saved-reports-section {
                 display: none;
@@ -478,8 +493,8 @@
                     </div>
                     <div class="writing-style-option">
                         <label>
-                            <input type="radio" name="writingStyle" value="concise">
-                            Style concis (synthétique)
+                            <input type="radio" name="writingStyle" value="dynamic">
+                            Discours animé
                         </label>
                     </div>
                 </div>
@@ -735,9 +750,11 @@
                     `;
                 } else {
                     content += `
-                        <p>Réunion de ${meetingType} tenue le ${startDate} à ${location}.</p>
-                        <p>Secrétaire de séance : ${secretary}.</p>
-                        <p>Durée : de ${startDate.split('à')[1]} à ${endDate.split('à')[1]}.</p>
+                        <div class="discourse-flow">
+                            <p>Nous nous sommes réunis ce ${startDate.split(' ')[0]} dans l'enceinte de ${location} pour une ${meetingType.toLowerCase()} des plus importantes, consacrée à "${meetingObject}".</p>
+                            <p>Animée par ${secretary} en qualité de secrétaire de séance, cette rencontre a débuté à ${startDate.split('à')[1]} dans une atmosphère à la fois studieuse et constructive.</p>
+                            <p>Au fil des échanges qui se sont poursuivis jusqu'à ${endDate.split('à')[1]}, nous avons successivement abordé les ${agendaItems.length} points essentiels qui structuraient notre ordre du jour.</p>
+                        </div>
                     `;
                 }
                 
@@ -752,7 +769,11 @@
                 } else if (style === 'educational') {
                     content += `<p>L'ordre du jour, composé de ${agendaItems.length} points, a structuré les échanges de la manière suivante :</p>`;
                 } else {
-                    content += `<p>Points abordés (${agendaItems.length}) :</p>`;
+                    content += `
+                        <div class="discourse-flow">
+                            <p>Notre parcours à travers l'ordre du jour nous a conduits à examiner successivement les points suivants :</p>
+                        </div>
+                    `;
                 }
                 
                 // Ajouter les points de l'ordre du jour
@@ -760,9 +781,14 @@
                     content += `
                         <div class="agenda-point">
                             <div class="agenda-point-title">${index + 1}. ${item.title}</div>
-                            <div class="agenda-point-content">${formatAgendaContent(item.details, style)}</div>
+                            <div class="agenda-point-content">${formatAgendaContent(item.details, style, index, agendaItems.length)}</div>
                         </div>
                     `;
+                    
+                    // Ajouter des transitions entre les points pour le style animé
+                    if (style === 'dynamic' && index < agendaItems.length - 1) {
+                        content += `<div class="transition-phrase">${generateTransition(index, agendaItems.length)}</div>`;
+                    }
                 });
                 
                 content += '</div>';
@@ -785,8 +811,12 @@
                     `;
                 } else {
                     content += `
-                        <p>La réunion a permis de traiter l'ensemble des points prévus.</p>
-                        <p>Les décisions prises seront suivies et évaluées lors de la prochaine réunion.</p>
+                        <div class="discourse-flow">
+                            <p>Au terme de cette ${meetingType.toLowerCase()} qui a duré près de ${calculateDuration(startDate, endDate)}, nous pouvons affirmer avec satisfaction que tous les objectifs fixés ont été atteints.</p>
+                            <p>Les échanges fructueux et les décisions prises collectivement témoignent de l'engagement de chacun pour faire avancer nos projets communs.</p>
+                            <p>Cette réunion aura été un moment fort de concertation et de réflexion stratégique, dont nous tirerons pleinement profit dans les semaines à venir.</p>
+                            <p>Rendez-vous est donc pris pour notre prochaine rencontre, où nous ferons le point sur l'avancement des décisions prises aujourd'hui.</p>
+                        </div>
                     `;
                 }
                 
@@ -806,7 +836,7 @@
             }
             
             // Formater le contenu d'un point de l'ordre du jour selon le style
-            function formatAgendaContent(details, style) {
+            function formatAgendaContent(details, style, index, totalItems) {
                 if (!details.trim()) return '<em>Aucun détail fourni</em>';
                 
                 const lines = details.split('\n').filter(line => line.trim());
@@ -829,7 +859,57 @@
                         }
                     }).join('');
                 } else {
-                    return lines.map(line => `<p>• ${line.trim()}</p>`).join('');
+                    // Style animé
+                    let formattedContent = '';
+                    
+                    if (index === 0) {
+                        formattedContent += `<p>Pour commencer, nous avons abordé la question de "${lines[0].split(':')[0] || lines[0].substring(0, 50)}..."</p>`;
+                    } else if (index === totalItems - 1) {
+                        formattedContent += `<p>Enfin, pour clôturer notre ordre du jour, nous nous sommes penchés sur "${lines[0].split(':')[0] || lines[0].substring(0, 50)}..."</p>`;
+                    } else {
+                        formattedContent += `<p>Poursuivant nos travaux, nous avons ensuite examiné "${lines[0].split(':')[0] || lines[0].substring(0, 50)}..."</p>`;
+                    }
+                    
+                    formattedContent += lines.map(line => {
+                        const trimmedLine = line.trim();
+                        return `<p>${trimmedLine}</p>`;
+                    }).join('');
+                    
+                    return formattedContent;
+                }
+            }
+            
+            // Générer des transitions entre les points pour le style animé
+            function generateTransition(currentIndex, totalItems) {
+                const transitions = [
+                    "Forts des conclusions de ce premier point, nous avons naturellement enchaîné avec le sujet suivant.",
+                    "Sur ces bases solides, nous avons poursuivi notre examen avec le point suivant.",
+                    "Ces éléments étant actés, l'assemblée s'est tournée vers le prochain point à l'ordre du jour.",
+                    "Après cet échange nourri, la discussion s'est orientée vers le sujet suivant.",
+                    "Une fois ce point clarifié, nous avons abordé la question suivante avec une vision renouvelée.",
+                    "Ces décisions prises, nous avons poursuivi notre cheminement à travers l'ordre du jour.",
+                    "Sur cette dynamique positive, nous avons enchaîné avec le point suivant.",
+                    "Ces perspectives tracées, nous nous sommes attelés à l'examen du sujet suivant."
+                ];
+                
+                // Choisir une transition aléatoire
+                return transitions[Math.floor(Math.random() * transitions.length)];
+            }
+            
+            // Calculer la durée de la réunion
+            function calculateDuration(startDate, endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const diffMs = end - start;
+                const diffHrs = Math.floor(diffMs / 3600000);
+                const diffMins = Math.round((diffMs % 3600000) / 60000);
+                
+                if (diffHrs === 0) {
+                    return `${diffMins} minutes`;
+                } else if (diffMins === 0) {
+                    return `${diffHrs} heure${diffHrs > 1 ? 's' : ''}`;
+                } else {
+                    return `${diffHrs} heure${diffHrs > 1 ? 's' : ''} et ${diffMins} minute${diffMins > 1 ? 's' : ''}`;
                 }
             }
             
@@ -965,7 +1045,7 @@
                 switch(style) {
                     case 'formal': return 'Formel';
                     case 'educational': return 'Pédagogique';
-                    case 'concise': return 'Concis';
+                    case 'dynamic': return 'Discours animé';
                     default: return 'Non spécifié';
                 }
             }
@@ -1022,6 +1102,8 @@
                             .signature-section { margin-top: 40px; text-align: right; }
                             .signature-line { width: 300px; border-bottom: 1px solid #333; margin: 40px auto 5px; display: inline-block; }
                             .signature-label { font-style: italic; color: #666; }
+                            .discourse-flow { background-color: #e8f4fc; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+                            .transition-phrase { font-style: italic; color: #3498db; margin: 10px 0; font-weight: 500; }
                         </style>
                     </head>
                     <body>
