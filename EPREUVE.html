@@ -244,6 +244,14 @@
             background: #219653;
         }
         
+        .btn-save {
+            background: #9b59b6;
+        }
+        
+        .btn-save:hover {
+            background: #8e44ad;
+        }
+        
         /* Bouton retour */
         .btn-retour {
             padding: 8px 12px;
@@ -730,6 +738,71 @@
             margin-bottom: 10px;
         }
         
+        /* Section des épreuves sauvegardées */
+        .saved-evaluations {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-section .form-group {
+            flex: 1;
+            min-width: 150px;
+            margin-bottom: 0;
+        }
+        
+        .evaluation-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: var(--radius-sm);
+            background: white;
+        }
+        
+        .evaluation-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .evaluation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .evaluation-item:hover {
+            background: #f0f0f0;
+        }
+        
+        .evaluation-info {
+            flex: 1;
+        }
+        
+        .evaluation-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .evaluation-details {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .evaluation-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
         /* Styles pour l'impression */
         @media print {
             body, html {
@@ -746,7 +819,8 @@
             }
             
             .container, .editor-panel, .preview-panel, header, .action-buttons, 
-            .section-buttons, .top-action-buttons, .modal, .btn-retour {
+            .section-buttons, .top-action-buttons, .modal, .btn-retour,
+            .saved-evaluations {
                 display: none !important;
             }
             
@@ -950,6 +1024,10 @@
                 padding: 5px 8px;
                 font-size: 0.8rem;
             }
+            
+            .filter-section {
+                flex-direction: column;
+            }
         }
         
         /* Responsive Design - Mobiles (écrans petits) */
@@ -1126,8 +1204,8 @@
                 <button class="btn-success" onclick="showPrintOptions()">
                     <i class="fas fa-file-pdf"></i> Générer PDF
                 </button>
-                <button class="btn-info" onclick="printEvaluation()">
-                    <i class="fas fa-print"></i> Imprimer
+                <button class="btn-save" onclick="saveEvaluation()">
+                    <i class="fas fa-save"></i> Sauvegarder
                 </button>
                 <button class="btn-danger" onclick="resetEvaluation()">
                     <i class="fas fa-trash"></i> Tout effacer
@@ -1239,6 +1317,30 @@
                     <p>Le contenu de votre évaluation apparaîtra ici.</p>
                 </div>
             </div>
+            
+            <!-- Section des épreuves sauvegardées -->
+            <div class="saved-evaluations">
+                <h3 class="panel-title"><i class="fas fa-history"></i> Épreuves sauvegardées</h3>
+                
+                <div class="filter-section">
+                    <div class="form-group">
+                        <label for="filter-subject"><i class="fas fa-filter"></i> Filtrer par matière</label>
+                        <select id="filter-subject" onchange="filterEvaluations()">
+                            <option value="">Toutes les matières</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-date"><i class="fas fa-calendar"></i> Filtrer par date</label>
+                        <select id="filter-date" onchange="filterEvaluations()">
+                            <option value="">Toutes les dates</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="evaluation-list" id="evaluation-list">
+                    <!-- Les épreuves sauvegardées apparaîtront ici -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1293,6 +1395,7 @@
         let questionCounter = 0;
         let subQuestionCounter = 0;
         let exerciseCounter = 0;
+        let savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
         
         // Initialisation des champs avec des valeurs par défaut
         document.getElementById('school-name').value = 'Lycée Louis Pasteur';
@@ -1305,6 +1408,7 @@
         
         // Mise à jour de l'aperçu
         updatePreview();
+        loadSavedEvaluations();
         
         // Fonction pour mettre à jour l'aperçu
         function updatePreview() {
@@ -2857,6 +2961,224 @@
             document.getElementById('printModal').style.display = 'none';
         }
         
+        // Fonction pour sauvegarder l'évaluation
+        function saveEvaluation() {
+            const evaluationData = {
+                id: Date.now().toString(),
+                title: document.getElementById('evaluation-title').value,
+                subject: document.getElementById('subject').value,
+                class: document.getElementById('class-name').value,
+                duration: document.getElementById('evaluation-duration').value,
+                points: document.getElementById('total-points').value,
+                content: document.getElementById('content-blocks').innerHTML,
+                preview: document.getElementById('preview-content').innerHTML,
+                date: new Date().toLocaleDateString('fr-FR'),
+                timestamp: Date.now()
+            };
+            
+            // Vérifier si l'évaluation existe déjà
+            const existingIndex = savedEvaluations.findIndex(e => e.id === evaluationData.id);
+            if (existingIndex !== -1) {
+                savedEvaluations[existingIndex] = evaluationData;
+            } else {
+                savedEvaluations.push(evaluationData);
+            }
+            
+            // Sauvegarder dans le localStorage
+            localStorage.setItem('savedEvaluations', JSON.stringify(savedEvaluations));
+            
+            // Mettre à jour l'affichage
+            loadSavedEvaluations();
+            
+            // Afficher un message de confirmation
+            alert('Évaluation sauvegardée avec succès !');
+        }
+        
+        // Fonction pour charger les évaluations sauvegardées
+        function loadSavedEvaluations() {
+            const evaluationList = document.getElementById('evaluation-list');
+            const filterSubject = document.getElementById('filter-subject');
+            const filterDate = document.getElementById('filter-date');
+            
+            // Vider les listes de filtres
+            filterSubject.innerHTML = '<option value="">Toutes les matières</option>';
+            filterDate.innerHTML = '<option value="">Toutes les dates</option>';
+            
+            // Récupérer les matières et dates uniques
+            const subjects = [...new Set(savedEvaluations.map(e => e.subject))];
+            const dates = [...new Set(savedEvaluations.map(e => e.date))];
+            
+            // Remplir les filtres
+            subjects.forEach(subject => {
+                filterSubject.innerHTML += `<option value="${subject}">${subject}</option>`;
+            });
+            
+            dates.forEach(date => {
+                filterDate.innerHTML += `<option value="${date}">${date}</option>`;
+            });
+            
+            // Filtrer les évaluations
+            const filteredEvaluations = filterEvaluations();
+            
+            // Afficher les évaluations
+            if (filteredEvaluations.length === 0) {
+                evaluationList.innerHTML = '<div class="evaluation-item">Aucune évaluation sauvegardée</div>';
+                return;
+            }
+            
+            evaluationList.innerHTML = '';
+            filteredEvaluations.forEach(evaluation => {
+                const evaluationItem = document.createElement('div');
+                evaluationItem.className = 'evaluation-item';
+                evaluationItem.innerHTML = `
+                    <div class="evaluation-info">
+                        <div class="evaluation-name">${evaluation.title}</div>
+                        <div class="evaluation-details">
+                            ${evaluation.subject} - ${evaluation.class} - ${evaluation.date}
+                        </div>
+                    </div>
+                    <div class="evaluation-actions">
+                        <button class="btn-info" onclick="loadEvaluation('${evaluation.id}')" title="Charger">
+                            <i class="fas fa-upload"></i>
+                        </button>
+                        <button class="btn-success" onclick="generatePDFFromSaved('${evaluation.id}')" title="Générer PDF">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                        <button class="btn-danger" onclick="deleteEvaluation('${evaluation.id}')" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                evaluationList.appendChild(evaluationItem);
+            });
+        }
+        
+        // Fonction pour filtrer les évaluations
+        function filterEvaluations() {
+            const filterSubject = document.getElementById('filter-subject').value;
+            const filterDate = document.getElementById('filter-date').value;
+            
+            return savedEvaluations.filter(evaluation => {
+                const subjectMatch = !filterSubject || evaluation.subject === filterSubject;
+                const dateMatch = !filterDate || evaluation.date === filterDate;
+                return subjectMatch && dateMatch;
+            });
+        }
+        
+        // Fonction pour charger une évaluation sauvegardée
+        function loadEvaluation(id) {
+            const evaluation = savedEvaluations.find(e => e.id === id);
+            if (!evaluation) return;
+            
+            // Charger les données dans l'éditeur
+            document.getElementById('evaluation-title').value = evaluation.title;
+            document.getElementById('subject').value = evaluation.subject;
+            document.getElementById('class-name').value = evaluation.class;
+            document.getElementById('evaluation-duration').value = evaluation.duration;
+            document.getElementById('total-points').value = evaluation.points;
+            
+            // Charger le contenu
+            document.getElementById('content-blocks').innerHTML = evaluation.content;
+            
+            // Mettre à jour l'aperçu
+            updatePreview();
+            updatePreviewContent();
+            
+            // Afficher un message
+            alert('Évaluation chargée avec succès !');
+        }
+        
+        // Fonction pour supprimer une évaluation
+        function deleteEvaluation(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette évaluation ?')) {
+                savedEvaluations = savedEvaluations.filter(e => e.id !== id);
+                localStorage.setItem('savedEvaluations', JSON.stringify(savedEvaluations));
+                loadSavedEvaluations();
+            }
+        }
+        
+        // Fonction pour générer un PDF à partir d'une évaluation sauvegardée
+        function generatePDFFromSaved(id) {
+            const evaluation = savedEvaluations.find(e => e.id === id);
+            if (!evaluation) return;
+            
+            // Créer un élément temporaire pour l'aperçu
+            const tempPreview = document.createElement('div');
+            tempPreview.className = 'evaluation-preview';
+            tempPreview.innerHTML = `
+                <div class="preview-header">
+                    <div class="watermark">${document.getElementById('watermarkText').value || 'ÉVALUATION'}</div>
+                    <div class="school-name">${document.getElementById('school-name').value}</div>
+                    <h1 class="evaluation-title">${evaluation.title}</h1>
+                    <p>Matière: ${evaluation.subject}</p>
+                    
+                    <div class="header-info">
+                        <div class="info-item">
+                            <i class="fas fa-user-tie"></i>
+                            <span>Enseignant: KOLA Maniwah Essohouna</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-users"></i>
+                            <span>Classe: ${evaluation.class}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Durée: ${evaluation.duration}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-star"></i>
+                            <span>Total: ${evaluation.points} points</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-content">${evaluation.preview}</div>
+            `;
+            
+            document.body.appendChild(tempPreview);
+            
+            // Générer le PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: document.getElementById('pdfOrientation').value,
+                unit: 'mm',
+                format: document.getElementById('pdfFormat').value
+            });
+            
+            html2canvas(tempPreview, {
+                scale: 2,
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = doc.internal.pageSize.getWidth();
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                // Ajouter des pages supplémentaires si nécessaire
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                while (heightLeft > 0) {
+                    position = heightLeft - doc.internal.pageSize.getHeight();
+                    if (position > 0) {
+                        doc.addPage();
+                        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= doc.internal.pageSize.getHeight();
+                    } else {
+                        heightLeft = 0;
+                    }
+                }
+                
+                // Nom du fichier
+                const fileName = `evaluation_${evaluation.title.replace(/\s+/g, '_')}.pdf`;
+                doc.save(fileName);
+                
+                // Supprimer l'élément temporaire
+                document.body.removeChild(tempPreview);
+            });
+        }
+        
         // Fonction pour générer un PDF avec gestion des coupures
         function generatePDF() {
             const { jsPDF } = window.jspdf;
@@ -2886,6 +3208,7 @@
                 studentField.innerHTML = `
                     <div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
                         <p><strong>Nom et prénom de l'élève:</strong> _________________________________</p>
+                        <p><strong>Date:</strong> _________________________</p>
                     </div>
                 `;
                 previewElement.insertBefore(studentField, previewElement.firstChild);
@@ -2961,45 +3284,6 @@
                 
                 closeModal();
             });
-        }
-        
-        // Fonction pour imprimer l'évaluation avec gestion des coupures
-        function printEvaluation() {
-            // Afficher toutes les solutions
-            const solutionToggles = document.querySelectorAll('.solution-toggle');
-            solutionToggles.forEach(toggle => {
-                const solutionId = toggle.getAttribute('onclick').match(/'([^']+)'/)[1];
-                document.getElementById(solutionId).style.display = 'block';
-            });
-            
-            // Appliquer des styles pour éviter les coupures
-            const previewElement = document.getElementById('evaluation-preview');
-            const originalStyles = previewElement.getAttribute('style') || '';
-            previewElement.setAttribute('style', originalStyles + '; page-break-inside: avoid; break-inside: avoid;');
-            
-            // Appliquer aux sections individuelles
-            const sections = previewElement.querySelectorAll('.content-section, .exercise, .qcm, .truefalse, .fillblank, .traditional, .problem, .instructions, .solution, .preview-image');
-            sections.forEach(section => {
-                const sectionOriginalStyles = section.getAttribute('style') || '';
-                section.setAttribute('style', sectionOriginalStyles + '; page-break-inside: avoid; break-inside: avoid;');
-            });
-            
-            // Imprimer
-            window.print();
-            
-            // Restaurer l'état initial après impression
-            setTimeout(() => {
-                const solutionContents = document.querySelectorAll('.solution-content');
-                solutionContents.forEach(content => {
-                    content.style.display = 'none';
-                });
-                
-                // Restaurer les styles originaux
-                previewElement.setAttribute('style', originalStyles);
-                sections.forEach(section => {
-                    section.setAttribute('style', section.getAttribute('style').replace(/; page-break-inside: avoid; break-inside: avoid;/, ''));
-                });
-            }, 500);
         }
         
         // Fonction pour réinitialiser l'évaluation
