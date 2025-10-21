@@ -3155,27 +3155,12 @@
                 
                 doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
                 
-                // Ajouter des pages supplémentaires si nécessaire
-                let heightLeft = imgHeight;
-                let position = 0;
-                
-                while (heightLeft > 0) {
-                    position = heightLeft - doc.internal.pageSize.getHeight();
-                    if (position > 0) {
-                        doc.addPage();
-                        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= doc.internal.pageSize.getHeight();
-                    } else {
-                        heightLeft = 0;
-                    }
-                }
+                // Supprimer l'élément temporaire
+                document.body.removeChild(tempPreview);
                 
                 // Nom du fichier
                 const fileName = `evaluation_${evaluation.title.replace(/\s+/g, '_')}.pdf`;
                 doc.save(fileName);
-                
-                // Supprimer l'élément temporaire
-                document.body.removeChild(tempPreview);
             });
         }
         
@@ -3197,7 +3182,10 @@
                 const solutionToggles = previewElement.querySelectorAll('.solution-toggle');
                 solutionToggles.forEach(toggle => {
                     const solutionId = toggle.getAttribute('onclick').match(/'([^']+)'/)[1];
-                    document.getElementById(solutionId).style.display = 'block';
+                    const solutionContent = document.getElementById(solutionId);
+                    if (solutionContent) {
+                        solutionContent.style.display = 'block';
+                    }
                 });
             }
             
@@ -3214,30 +3202,35 @@
                 previewElement.insertBefore(studentField, previewElement.firstChild);
             }
             
-            // Appliquer des styles CSS pour éviter les coupures
-            const originalStyles = previewElement.getAttribute('style') || '';
-            previewElement.setAttribute('style', originalStyles + '; page-break-inside: avoid; break-inside: avoid;');
+            // Créer un clone de l'élément pour l'impression
+            const printElement = previewElement.cloneNode(true);
+            printElement.style.width = '100%';
+            printElement.style.margin = '0';
+            printElement.style.padding = '0';
+            printElement.style.boxShadow = 'none';
+            printElement.style.background = 'white';
+            
+            // Appliquer des styles pour éviter les coupures
+            const sections = printElement.querySelectorAll('.content-section, .exercise, .qcm, .truefalse, .fillblank, .traditional, .problem, .instructions, .solution, .preview-image');
+            sections.forEach(section => {
+                section.style.pageBreakInside = 'avoid';
+                section.style.breakInside = 'avoid';
+            });
+            
+            // Ajouter l'élément cloné au corps temporairement
+            printElement.style.position = 'fixed';
+            printElement.style.left = '0';
+            printElement.style.top = '0';
+            printElement.style.zIndex = '-1000';
+            document.body.appendChild(printElement);
             
             // Générer le PDF
-            html2canvas(previewElement, {
+            html2canvas(printElement, {
                 scale: 2,
                 useCORS: true,
                 logging: false,
-                onclone: function(clonedDoc) {
-                    // Appliquer les styles d'évitement de coupure sur le clone
-                    const clonedPreview = clonedDoc.getElementById('evaluation-preview');
-                    if (clonedPreview) {
-                        clonedPreview.style.pageBreakInside = 'avoid';
-                        clonedPreview.style.breakInside = 'avoid';
-                        
-                        // Appliquer aux sections individuelles
-                        const sections = clonedPreview.querySelectorAll('.content-section, .exercise, .qcm, .truefalse, .fillblank, .traditional, .problem, .instructions, .solution, .preview-image');
-                        sections.forEach(section => {
-                            section.style.pageBreakInside = 'avoid';
-                            section.style.breakInside = 'avoid';
-                        });
-                    }
-                }
+                width: printElement.scrollWidth,
+                height: printElement.scrollHeight
             }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const imgWidth = doc.internal.pageSize.getWidth();
@@ -3246,26 +3239,8 @@
                 // Ajouter la première page
                 doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
                 
-                // Ajouter des pages supplémentaires si nécessaire
-                let heightLeft = imgHeight;
-                let position = 0;
-                let pageCount = 1;
-                
-                while (heightLeft > 0) {
-                    position = heightLeft - doc.internal.pageSize.getHeight();
-                    if (position > 0) {
-                        doc.addPage();
-                        pageCount++;
-                        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= doc.internal.pageSize.getHeight();
-                    } else {
-                        heightLeft = 0;
-                    }
-                }
-                
-                // Nom du fichier
-                const fileName = `evaluation_${document.getElementById('evaluation-title').value.replace(/\s+/g, '_')}.pdf`;
-                doc.save(fileName);
+                // Supprimer l'élément cloné
+                document.body.removeChild(printElement);
                 
                 // Restaurer l'état initial
                 if (studentNameField) {
@@ -3279,10 +3254,30 @@
                     });
                 }
                 
-                // Restaurer les styles originaux
-                previewElement.setAttribute('style', originalStyles);
+                // Nom du fichier
+                const fileName = `evaluation_${document.getElementById('evaluation-title').value.replace(/\s+/g, '_')}.pdf`;
+                doc.save(fileName);
                 
                 closeModal();
+            }).catch(error => {
+                console.error('Erreur lors de la génération du PDF:', error);
+                alert('Une erreur est survenue lors de la génération du PDF. Veuillez réessayer.');
+                
+                // Nettoyer en cas d'erreur
+                if (document.body.contains(printElement)) {
+                    document.body.removeChild(printElement);
+                }
+                
+                if (studentNameField) {
+                    previewElement.removeChild(previewElement.firstChild);
+                }
+                
+                if (includeSolutions) {
+                    const solutionContents = previewElement.querySelectorAll('.solution-content');
+                    solutionContents.forEach(content => {
+                        content.style.display = 'none';
+                    });
+                }
             });
         }
         
