@@ -1202,7 +1202,7 @@
             <!-- Boutons d'action en haut -->
             <div class="top-action-buttons">
                 <button class="btn-success" onclick="showPrintOptions()">
-                    <i class="fas fa-file-pdf"></i> Générer PDF
+                    <i class="fas fa-print"></i> Imprimer PDF
                 </button>
                 <button class="btn-save" onclick="saveEvaluation()">
                     <i class="fas fa-save"></i> Sauvegarder
@@ -1384,7 +1384,7 @@
             </div>
             <div class="action-buttons">
                 <button class="btn-success" onclick="generatePDF()">
-                    <i class="fas fa-file-pdf"></i> Générer PDF
+                    <i class="fas fa-print"></i> Imprimer PDF
                 </button>
             </div>
         </div>
@@ -3041,8 +3041,8 @@
                         <button class="btn-info" onclick="loadEvaluation('${evaluation.id}')" title="Charger">
                             <i class="fas fa-upload"></i>
                         </button>
-                        <button class="btn-success" onclick="generatePDFFromSaved('${evaluation.id}')" title="Générer PDF">
-                            <i class="fas fa-file-pdf"></i>
+                        <button class="btn-success" onclick="generatePDFFromSaved('${evaluation.id}')" title="Imprimer PDF">
+                            <i class="fas fa-print"></i>
                         </button>
                         <button class="btn-danger" onclick="deleteEvaluation('${evaluation.id}')" title="Supprimer">
                             <i class="fas fa-trash"></i>
