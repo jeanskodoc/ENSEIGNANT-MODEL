@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Styles existants inchangés */
         :root {
             --primary: #3498db;
             --primary-light: #5dade2;
@@ -250,6 +251,22 @@
         
         .btn-save:hover {
             background: #8e44ad;
+        }
+        
+        .btn-export {
+            background: #16a085;
+        }
+        
+        .btn-export:hover {
+            background: #138d75;
+        }
+        
+        .btn-import {
+            background: #d35400;
+        }
+        
+        .btn-import:hover {
+            background: #ba4a00;
         }
         
         /* Bouton retour */
@@ -1199,13 +1216,19 @@
     
     <div class="container">
         <div class="editor-panel">
-            <!-- Boutons d'action en haut -->
+            <!-- Boutons d'action en haut - AJOUT DES BOUTONS EXPORTER ET IMPORTER -->
             <div class="top-action-buttons">
                 <button class="btn-success" onclick="showPrintOptions()">
                     <i class="fas fa-print"></i> Imprimer PDF
                 </button>
                 <button class="btn-save" onclick="saveEvaluation()">
                     <i class="fas fa-save"></i> Sauvegarder
+                </button>
+                <button class="btn-export" onclick="exportEvaluation()">
+                    <i class="fas fa-download"></i> Exporter
+                </button>
+                <button class="btn-import" onclick="importEvaluation()">
+                    <i class="fas fa-upload"></i> Importer
                 </button>
                 <button class="btn-danger" onclick="resetEvaluation()">
                     <i class="fas fa-trash"></i> Tout effacer
@@ -1390,6 +1413,9 @@
         </div>
     </div>
 
+    <!-- Input caché pour l'importation de fichiers -->
+    <input type="file" id="importFile" accept=".json" style="display: none;">
+
     <script>
         // Variables globales pour la numérotation
         let questionCounter = 0;
@@ -1458,6 +1484,84 @@
             }
             return result;
         }
+        
+        // Fonction pour exporter l'évaluation en JSON
+        function exportEvaluation() {
+            const evaluationData = {
+                metadata: {
+                    title: document.getElementById('evaluation-title').value,
+                    subject: document.getElementById('subject').value,
+                    class: document.getElementById('class-name').value,
+                    duration: document.getElementById('evaluation-duration').value,
+                    points: document.getElementById('total-points').value,
+                    school: document.getElementById('school-name').value,
+                    teacher: document.getElementById('teacher-name').value,
+                    exportDate: new Date().toISOString()
+                },
+                content: document.getElementById('content-blocks').innerHTML,
+                preview: document.getElementById('preview-content').innerHTML
+            };
+            
+            const dataStr = JSON.stringify(evaluationData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `evaluation_${evaluationData.metadata.title.replace(/\s+/g, '_')}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            alert('Évaluation exportée avec succès !');
+        }
+        
+        // Fonction pour importer une évaluation depuis un fichier JSON
+        function importEvaluation() {
+            document.getElementById('importFile').click();
+        }
+        
+        // Gestionnaire d'événement pour l'importation de fichiers
+        document.getElementById('importFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const evaluationData = JSON.parse(e.target.result);
+                    
+                    // Charger les métadonnées
+                    if (evaluationData.metadata) {
+                        document.getElementById('evaluation-title').value = evaluationData.metadata.title || '';
+                        document.getElementById('subject').value = evaluationData.metadata.subject || '';
+                        document.getElementById('class-name').value = evaluationData.metadata.class || '';
+                        document.getElementById('evaluation-duration').value = evaluationData.metadata.duration || '';
+                        document.getElementById('total-points').value = evaluationData.metadata.points || '';
+                        document.getElementById('school-name').value = evaluationData.metadata.school || '';
+                    }
+                    
+                    // Charger le contenu
+                    if (evaluationData.content) {
+                        document.getElementById('content-blocks').innerHTML = evaluationData.content;
+                    }
+                    
+                    // Mettre à jour l'aperçu
+                    updatePreview();
+                    updatePreviewContent();
+                    
+                    // Réinitialiser le champ de fichier
+                    document.getElementById('importFile').value = '';
+                    
+                    alert('Évaluation importée avec succès !');
+                } catch (error) {
+                    console.error('Erreur lors de l\'importation:', error);
+                    alert('Erreur lors de l\'importation du fichier. Vérifiez que le fichier est valide.');
+                }
+            };
+            reader.readAsText(file);
+        });
         
         // Fonction pour ajouter un exercice
         function addExercise() {
@@ -2840,7 +2944,7 @@
                                         <div class="solution-content" id="${blockId}-solution">
                                             <div class="solution-title"><i class="fas fa-check-circle"></i> Solution</div>
                                             <p>${solution}</p>
-                                        </div>
+                                            </div>
                                     ` : ''}
                                 </div>
                             </div>
