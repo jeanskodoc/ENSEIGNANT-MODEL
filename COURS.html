@@ -250,6 +250,14 @@
             background: #a1d0fd;
         }
         
+        .btn-latex {
+            background: #008080;
+        }
+        
+        .btn-latex:hover {
+            background: #006666;
+        }
+        
         .action-buttons {
             display: grid;
             grid-template-columns: 1fr;
@@ -809,6 +817,90 @@
             text-align: right;
         }
         
+        /* Styles pour l'affichage du code LaTeX */
+        .latex-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .latex-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 90%;
+            width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .latex-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .latex-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        .latex-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .latex-code {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 60vh;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        
+        .copy-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .copy-btn:hover {
+            background: #3ab0d5;
+            transform: translateY(-2px);
+        }
+        
+        .copy-btn.copied {
+            background: var(--text-green);
+        }
+        
         /* Responsive Design */
         @media (min-width: 576px) {
             .header-info {
@@ -1037,6 +1129,12 @@
                 </button>
                 <button class="btn-success" onclick="generatePDF()">
                     <i class="fas fa-file-pdf"></i> Générer PDF
+                </button>
+                <button class="btn-latex" onclick="generateLatex()">
+                    <i class="fas fa-file-download"></i> Télécharger LaTeX
+                </button>
+                <button class="btn-latex" onclick="showLatexCode()">
+                    <i class="fas fa-code"></i> Afficher LaTeX
                 </button>
                 <button class="btn-info" onclick="showViewOnlyPreview()">
                     <i class="fas fa-expand"></i> Aperçu seul
@@ -1986,6 +2084,308 @@
                 // Télécharger le PDF
                 pdf.save(`leçon_${document.getElementById('lesson-title').value || 'sans_titre'}.pdf`);
             });
+        }
+        
+        // Fonction pour générer le code LaTeX
+        function generateLatex() {
+            // Synchroniser le contenu avant de générer le LaTeX
+            synchronizeContent();
+            
+            const latexCode = generateLatexCode();
+            
+            // Créer un blob avec le code LaTeX
+            const blob = new Blob([latexCode], {type: 'text/plain'});
+            
+            // Créer un lien de téléchargement
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `leçon_${document.getElementById('lesson-title').value || 'sans_titre'}.tex`;
+            link.click();
+            
+            alert('Code LaTeX généré avec succès !');
+        }
+        
+        // Fonction pour afficher le code LaTeX
+        function showLatexCode() {
+            // Synchroniser le contenu avant de générer le LaTeX
+            synchronizeContent();
+            
+            const latexCode = generateLatexCode();
+            
+            // Créer l'overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'latex-overlay';
+            overlay.innerHTML = `
+                <div class="latex-content">
+                    <div class="latex-header">
+                        <div class="latex-title">Code LaTeX généré</div>
+                        <div class="latex-actions">
+                            <button class="copy-btn" id="copy-latex-btn">
+                                <i class="fas fa-copy"></i> Copier
+                            </button>
+                            <button class="close-btn" onclick="this.parentElement.parentElement.parentElement.remove()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="latex-code" id="latex-code">${escapeHtml(latexCode)}</div>
+                    <p><small>Vous pouvez copier ce code et le coller dans votre éditeur LaTeX préféré.</small></p>
+                </div>
+            `;
+            
+            // Ajouter l'overlay au document
+            document.body.appendChild(overlay);
+            
+            // Ajouter l'événement de copie
+            document.getElementById('copy-latex-btn').addEventListener('click', function() {
+                copyLatexCode(latexCode);
+            });
+        }
+        
+        // Fonction pour échapper le HTML dans le code LaTeX affiché
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Fonction pour synchroniser le contenu avant de générer le LaTeX
+        function synchronizeContent() {
+            // Mettre à jour l'aperçu pour s'assurer que tout est à jour
+            updatePreview();
+            
+            // Sauvegarder automatiquement les modifications dans le stockage local
+            saveToLocalStorage();
+            
+            console.log('Contenu synchronisé pour la génération LaTeX');
+        }
+        
+        // Fonction pour copier le code LaTeX
+        function copyLatexCode(latexCode) {
+            const copyBtn = document.getElementById('copy-latex-btn');
+            
+            // Utiliser l'API Clipboard moderne
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(latexCode).then(() => {
+                    showCopySuccess(copyBtn);
+                }).catch(err => {
+                    console.error('Erreur lors de la copie: ', err);
+                    fallbackCopyText(latexCode, copyBtn);
+                });
+            } else {
+                // Fallback pour les navigateurs plus anciens
+                fallbackCopyText(latexCode, copyBtn);
+            }
+        }
+        
+        // Fallback pour la copie de texte
+        function fallbackCopyText(text, copyBtn) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopySuccess(copyBtn);
+            } catch (err) {
+                console.error('Fallback: Erreur lors de la copie: ', err);
+                alert('Erreur lors de la copie du code LaTeX. Veuillez copier manuellement le texte affiché.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        // Fonction pour afficher le succès de la copie
+        function showCopySuccess(copyBtn) {
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copié !';
+            copyBtn.classList.add('copied');
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.classList.remove('copied');
+            }, 2000);
+        }
+        
+        // Fonction pour générer le code LaTeX
+        function generateLatexCode() {
+            // Récupérer les données du formulaire
+            const schoolName = document.getElementById('school-name').value || 'Nom de l\'établissement';
+            const teacherName = document.getElementById('teacher-name-display').textContent;
+            const subject = document.getElementById('subject').value || 'Matière';
+            const discipline = document.getElementById('discipline').value || 'Discipline';
+            const lessonTheme = document.getElementById('lesson-theme').value || 'Thème de la leçon';
+            const className = document.getElementById('class-name').value || 'Classe';
+            const boysCount = parseInt(document.getElementById('boys-count').value) || 0;
+            const girlsCount = parseInt(document.getElementById('girls-count').value) || 0;
+            const totalStudents = boysCount + girlsCount;
+            const lessonTitle = document.getElementById('lesson-title').value || 'Titre de la leçon';
+            const lessonDuration = document.getElementById('lesson-duration').value || 'Durée';
+            const lessonDate = formatDate(document.getElementById('lesson-date').value) || 'Date';
+            
+            // Construire le code LaTeX
+            let latexCode = `\\documentclass[12pt]{article}
+\\usepackage[utf8]{inputenc}
+\\usepackage[T1]{fontenc}
+\\usepackage[french]{babel}
+\\usepackage{geometry}
+\\geometry{a4paper, margin=2.5cm}
+\\usepackage{graphicx}
+\\usepackage{amsmath, amssymb}
+\\usepackage{enumitem}
+\\usepackage{titlesec}
+\\usepackage{fancyhdr}
+\\usepackage{color}
+
+\\titleformat{\\section}{\\Large\\bfseries}{}{0pt}{}
+\\titleformat{\\subsection}{\\large\\bfseries}{}{0pt}{}
+
+\\pagestyle{fancy}
+\\fancyhf{}
+\\fancyhead[L]{${escapeLaTeX(schoolName)}}
+\\fancyhead[R]{${escapeLaTeX(teacherName)}}
+\\fancyfoot[C]{\\thepage}
+
+\\begin{document}
+
+\\begin{center}
+    \\LARGE\\textbf{${escapeLaTeX(lessonTitle)}}
+\\end{center}
+
+\\vspace{0.5cm}
+
+\\begin{tabular}{p{0.45\\textwidth}p{0.45\\textwidth}}
+    \\textbf{Matière:} ${escapeLaTeX(subject)} & \\textbf{Classe:} ${escapeLaTeX(className)} \\\\
+    \\textbf{Discipline:} ${escapeLaTeX(discipline)} & \\textbf{Effectif:} ${totalStudents} élèves (${boysCount} garçons, ${girlsCount} filles) \\\\
+    \\textbf{Thème:} ${escapeLaTeX(lessonTheme)} & \\textbf{Durée:} ${escapeLaTeX(lessonDuration)} \\\\
+    & \\textbf{Date:} ${escapeLaTeX(lessonDate)}
+\\end{tabular}
+
+\\vspace{1cm}
+`;
+
+            // Récupérer le contenu des sections
+            const sections = document.querySelectorAll('.content-block');
+            
+            sections.forEach(section => {
+                const sectionType = section.dataset.type;
+                const numberingType = section.dataset.numbering || 'none';
+                
+                if (sectionType === 'image') {
+                    const captionInput = section.querySelector('input[type="text"]');
+                    const caption = captionInput ? captionInput.value : '';
+                    
+                    latexCode += `
+\\begin{figure}[h]
+    \\centering
+    \\includegraphics[width=0.8\\textwidth]{image_placeholder}
+    \\caption{${escapeLaTeX(caption)}}
+\\end{figure}
+`;
+                } else {
+                    const editor = section.querySelector('.text-editor');
+                    if (editor) {
+                        const content = editor.innerHTML;
+                        
+                        // Convertir le HTML en LaTeX basique
+                        let latexContent = content
+                            .replace(/<strong>(.*?)<\/strong>/g, '\\textbf{$1}')
+                            .replace(/<b>(.*?)<\/b>/g, '\\textbf{$1}')
+                            .replace(/<em>(.*?)<\/em>/g, '\\emph{$1}')
+                            .replace(/<i>(.*?)<\/i>/g, '\\emph{$1}')
+                            .replace(/<u>(.*?)<\/u>/g, '\\underline{$1}')
+                            .replace(/<br>/g, '\\\\')
+                            .replace(/<p>/g, '')
+                            .replace(/<\/p>/g, '\\\\')
+                            .replace(/<div>/g, '')
+                            .replace(/<\/div>/g, '')
+                            .replace(/&nbsp;/g, ' ')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>');
+                        
+                        let sectionTitle = '';
+                        switch(sectionType) {
+                            case 'definition':
+                                sectionTitle = 'Définition';
+                                break;
+                            case 'theorem':
+                                sectionTitle = 'Théorème';
+                                break;
+                            case 'example':
+                                sectionTitle = 'Exemple';
+                                break;
+                            case 'exercise':
+                                sectionTitle = 'Exercice';
+                                break;
+                            case 'problem':
+                                sectionTitle = 'Problème';
+                                break;
+                            case 'student-work':
+                                sectionTitle = 'Travail élève';
+                                break;
+                            case 'solution':
+                                sectionTitle = 'Solution';
+                                break;
+                            case 'homework':
+                                sectionTitle = 'Devoir maison';
+                                break;
+                            case 'prerequisites':
+                                sectionTitle = 'Prérequis';
+                                break;
+                            case 'materials':
+                                sectionTitle = 'Matériel nécessaire';
+                                break;
+                            case 'strategy':
+                                sectionTitle = 'Stratégie pédagogique';
+                                break;
+                        }
+                        
+                        if (numberingType === 'roman') {
+                            latexCode += `
+\\section{${escapeLaTeX(sectionTitle)}}
+${escapeLaTeX(latexContent)}
+`;
+                        } else if (numberingType === 'letter') {
+                            latexCode += `
+\\subsection{${escapeLaTeX(sectionTitle)}}
+${escapeLaTeX(latexContent)}
+`;
+                        } else {
+                            latexCode += `
+\\textbf{${escapeLaTeX(sectionTitle)}:} ${escapeLaTeX(latexContent)}
+`;
+                        }
+                    }
+                }
+            });
+            
+            latexCode += `
+\\end{document}
+`;
+            
+            return latexCode;
+        }
+        
+        // Fonction pour échapper les caractères spéciaux LaTeX
+        function escapeLaTeX(text) {
+            if (!text) return '';
+            
+            return text
+                .replace(/\\/g, '\\textbackslash{}')
+                .replace(/#/g, '\\#')
+                .replace(/\$/g, '\\$')
+                .replace(/%/g, '\\%')
+                .replace(/&/g, '\\&')
+                .replace(/_/g, '\\_')
+                .replace(/{/g, '\\{')
+                .replace(/}/g, '\\}')
+                .replace(/~/g, '\\textasciitilde{}')
+                .replace(/\^/g, '\\textasciicircum{}');
         }
         
         // Fonction pour afficher l'aperçu seul
