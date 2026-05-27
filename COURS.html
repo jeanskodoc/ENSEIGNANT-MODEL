@@ -1,2431 +1,718 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Créateur de Fiches de Leçons</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #4361ee;
-            --secondary: #3a0ca3;
-            --success: #4cc9f0;
-            --warning: #f72585;
-            --danger: #e63946;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --problem: #ffd166;
-            --student-work: #a8dadc;
-            --homework: #cdb4db;
-            --prerequisites: #ffafcc;
-            --materials: #bde0fe;
-            --strategy: #cdb4db;
-            --text-red: #e63946;
-            --text-green: #2a9d8f;
-            --text-blue: #4361ee;
-            --text-black: #212529;
-            --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
-            --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            --hover-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: #333;
-            line-height: 1.6;
-            padding: 15px;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        
-        header {
-            background: var(--gradient);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: var(--card-shadow);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #4cc9f0, #f72585, #4361ee);
-        }
-        
-        header h1 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .app-description {
-            font-size: 1rem;
-            max-width: 800px;
-            margin: 0 auto;
-            opacity: 0.9;
-        }
-        
-        .editor-panel {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--card-shadow);
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        
-        .editor-panel:hover {
-            box-shadow: var(--hover-shadow);
-        }
-        
-        .preview-panel {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--card-shadow);
-            overflow-y: auto;
-            max-height: calc(100vh - 100px);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        
-        .preview-panel:hover {
-            box-shadow: var(--hover-shadow);
-        }
-        
-        .panel-title {
-            color: var(--secondary);
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.2rem;
-        }
-        
-        .panel-title i {
-            color: var(--primary);
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.95rem;
-        }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-        
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        }
-        
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.3s;
-            font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            margin-bottom: 8px;
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .btn-success {
-            background: var(--success);
-        }
-        
-        .btn-success:hover {
-            background: #3ab0d5;
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-        }
-        
-        .btn-danger:hover {
-            background: #d32f2f;
-        }
-        
-        .btn-warning {
-            background: var(--warning);
-        }
-        
-        .btn-warning:hover {
-            background: #e11571;
-        }
-        
-        .btn-info {
-            background: var(--primary);
-        }
-        
-        .btn-info:hover {
-            background: #3050d6;
-        }
-        
-        .btn-purple {
-            background: #7209b7;
-        }
-        
-        .btn-purple:hover {
-            background: #5e0796;
-        }
-        
-        .btn-pink {
-            background: #ffafcc;
-        }
-        
-        .btn-pink:hover {
-            background: #ff91ba;
-        }
-        
-        .btn-blue {
-            background: #bde0fe;
-        }
-        
-        .btn-blue:hover {
-            background: #a1d0fd;
-        }
-        
-        .btn-latex {
-            background: #008080;
-        }
-        
-        .btn-latex:hover {
-            background: #006666;
-        }
-        
-        .action-buttons {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .section-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin: 15px 0;
-        }
-        
-        .content-blocks {
-            margin-top: 20px;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-        
-        .content-block {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 5px solid var(--primary);
-            transition: all 0.3s;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .content-block:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .block-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .block-title {
-            font-weight: 600;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.95rem;
-        }
-        
-        .block-actions {
-            display: flex;
-            gap: 6px;
-        }
-        
-        .image-preview {
-            max-width: 100%;
-            margin-top: 10px;
-            border-radius: 8px;
-            display: none;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .lesson-preview {
-            padding: 20px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-            min-height: 400px;
-            border-radius: 10px;
-        }
-        
-        .preview-header {
-            background: var(--gradient);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .school-name {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-bottom: 6px;
-            color: #ffd700;
-        }
-        
-        .lesson-title {
-            font-size: 1.8rem;
-            margin-bottom: 12px;
-        }
-        
-        .header-info {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .info-item {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 12px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .preview-content {
-            padding: 15px 0;
-        }
-        
-        .content-section {
-            margin-bottom: 25px;
-        }
-        
-        .section-title {
-            color: var(--secondary);
-            margin-bottom: 10px;
-            padding-bottom: 6px;
-            border-bottom: 2px solid var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 1.1rem;
-        }
-        
-        .definition, .theorem, .example, .exercise, .problem, .student-work, .solution, .homework, .prerequisites, .materials, .strategy {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .definition {
-            background: #e8f4fc;
-            border-left: 5px solid var(--primary);
-        }
-        
-        .theorem {
-            background: #e8f4fc;
-            border-left: 5px solid var(--primary);
-        }
-        
-        .example {
-            background: #e7f9ed;
-            border-left: 5px solid var(--success);
-        }
-        
-        .exercise {
-            background: #fef9e7;
-            border-left: 5px solid var(--warning);
-        }
-        
-        .problem {
-            background: var(--problem);
-            border-left: 5px solid #ffb347;
-        }
-        
-        .student-work {
-            background: var(--student-work);
-            border-left: 5px solid var(--primary);
-        }
-        
-        .solution {
-            background: #f4ecf7;
-            border-left: 5px solid #7209b7;
-        }
-        
-        .homework {
-            background: var(--homework);
-            border-left: 5px solid #7209b7;
-        }
-        
-        .prerequisites {
-            background: var(--prerequisites);
-            border-left: 5px solid #ff70a6;
-        }
-        
-        .materials {
-            background: var(--materials);
-            border-left: 5px solid #7fbfff;
-        }
-        
-        .strategy {
-            background: var(--strategy);
-            border-left: 5px solid #a663cc;
-        }
-        
-        .preview-image {
-            max-width: 100%;
-            border-radius: 8px;
-            margin: 10px 0;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .homework-info {
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 6px;
-            font-style: italic;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        /* Styles pour la barre d'outils de formatage */
-        .formatting-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 10px;
-            padding: 8px;
-            background: #f0f0f0;
-            border-radius: 6px;
-        }
-        
-        .format-btn {
-            width: 36px;
-            height: 36px;
-            border: none;
-            border-radius: 6px;
-            background-color: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: all 0.2s;
-        }
-        
-        .format-btn:hover {
-            background-color: #f0f0f0;
-            transform: translateY(-2px);
-        }
-        
-        .format-btn.active {
-            background-color: #e0e0e0;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        .color-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .color-btn:hover {
-            transform: scale(1.1);
-        }
-        
-        .color-btn.red {
-            background-color: var(--text-red);
-        }
-        
-        .color-btn.green {
-            background-color: var(--text-green);
-        }
-        
-        .color-btn.blue {
-            background-color: var(--text-blue);
-        }
-        
-        .color-btn.black {
-            background-color: var(--text-black);
-        }
-        
-        .color-btn.active {
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.3);
-            transform: scale(1.1);
-        }
-        
-        .data-management {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-        }
-        
-        .filter-section {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .filter-row {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .saved-lessons {
-            margin-top: 15px;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 12px;
-            background: #f8f9fa;
-        }
-        
-        .lesson-item {
-            padding: 10px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.2s;
-            border-radius: 6px;
-        }
-        
-        .lesson-item:hover {
-            background: white;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .lesson-item:last-child {
-            border-bottom: none;
-        }
-        
-        .lesson-info {
-            flex-grow: 1;
-        }
-        
-        .lesson-title-small {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-        
-        .lesson-meta {
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 3px;
-        }
-        
-        .lesson-actions {
-            display: flex;
-            gap: 6px;
-        }
-        
-        .text-editor {
-            min-height: 100px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 12px;
-            background: white;
-            transition: all 0.3s;
-        }
-        
-        .text-editor:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        }
-        
-        .mobile-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .mobile-controls button {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        
-        .view-only-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        
-        .view-only-content {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-        }
-        
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: var(--danger);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            z-index: 1001;
-        }
-        
-        .class-count {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .class-count-item {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            background: #f8f9fa;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .class-count-item.total {
-            background: var(--primary);
-            color: white;
-            font-weight: bold;
-        }
-        
-        .teacher-display {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            font-weight: 600;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .numbering-controls {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 10px;
-            padding: 8px;
-            background: #f0f0f0;
-            border-radius: 6px;
-        }
-        
-        .numbering-btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            background-color: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: all 0.2s;
-            font-size: 0.85rem;
-        }
-        
-        .numbering-btn:hover {
-            background-color: #f0f0f0;
-            transform: translateY(-2px);
-        }
-        
-        .numbering-btn.active {
-            background-color: #e0e0e0;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        .alignment-controls {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 10px;
-            padding: 8px;
-            background: #f0f0f0;
-            border-radius: 6px;
-        }
-        
-        .alignment-btn {
-            width: 36px;
-            height: 36px;
-            border: none;
-            border-radius: 6px;
-            background-color: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: all 0.2s;
-        }
-        
-        .alignment-btn:hover {
-            background-color: #f0f0f0;
-            transform: translateY(-2px);
-        }
-        
-        .alignment-btn.active {
-            background-color: #e0e0e0;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        /* Styles pour la numérotation dans l'aperçu */
-        .numbered-title {
-            counter-increment: section;
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .numbered-title::before {
-            content: counter(section, upper-roman) ". ";
-            font-weight: bold;
-            margin-right: 8px;
-            color: var(--primary);
-        }
-        
-        .numbered-subtitle {
-            counter-increment: subsection;
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .numbered-subtitle::before {
-            content: counter(subsection, lower-alpha) ". ";
-            font-weight: bold;
-            margin-right: 6px;
-            color: var(--secondary);
-        }
-        
-        /* Styles pour l'alignement dans l'aperçu */
-        .text-left {
-            text-align: left;
-        }
-        
-        .text-center {
-            text-align: center;
-        }
-        
-        .text-right {
-            text-align: right;
-        }
-        
-        /* Styles pour l'affichage du code LaTeX */
-        .latex-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        
-        .latex-content {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            max-width: 90%;
-            width: 800px;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-        }
-        
-        .latex-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        .latex-title {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--secondary);
-        }
-        
-        .latex-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .latex-code {
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            overflow-x: auto;
-            max-height: 60vh;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-        
-        .copy-btn {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .copy-btn:hover {
-            background: #3ab0d5;
-            transform: translateY(-2px);
-        }
-        
-        .copy-btn.copied {
-            background: var(--text-green);
-        }
-        
-        /* Responsive Design */
-        @media (min-width: 576px) {
-            .header-info {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .section-buttons {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .action-buttons {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .filter-row {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (min-width: 768px) {
-            .container {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .header-info {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .section-buttons {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .action-buttons {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .filter-row {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            button {
-                width: auto;
-                margin-bottom: 0;
-            }
-            
-            .mobile-controls {
-                display: none;
-            }
-        }
-        
-        @media (min-width: 992px) {
-            .container {
-                grid-template-columns: 320px 1fr;
-            }
-            
-            .header-info {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            
-            .section-buttons {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .action-buttons {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .filter-row {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (min-width: 1200px) {
-            .container {
-                grid-template-columns: 350px 1fr;
-            }
-            
-            .action-buttons {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Générateur de Fiche Pédagogique — Complète</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,500&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --primary: #0a2463; --primary-light: #1e3a8a; --primary-mid: #3b82f6; --primary-surface: #eef2ff;
+    --accent: #f59e0b; --accent-light: #fef3c7; --success: #10b981; --success-light: #d1fae5;
+    --danger: #ef4444; --danger-light: #fee2e2; --orange: #f97316; --orange-light: #ffedd5;
+    --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0; --gray-300: #cbd5e1;
+    --gray-400: #94a3b8; --gray-500: #64748b; --gray-600: #475569; --gray-700: #334155; --gray-800: #1e293b;
+    --radius: 12px; --radius-sm: 8px; --radius-xs: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.04);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: var(--gray-100); color: var(--gray-800); line-height: 1.5; }
+  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+  .app-layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 500px; min-width: 500px; background: white; border-right: 1px solid var(--gray-200); overflow-y: auto; height: 100vh; position: sticky; top: 0; z-index: 50; }
+  .sidebar-inner { padding: 14px 12px; }
+  .sidebar-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--gray-100); }
+  .sidebar-header .logo { width: 30px; height: 30px; background: var(--primary); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: white; font-size: .9rem; font-weight: 700; }
+  .sidebar-header h2 { font-size: .85rem; font-weight: 700; color: var(--gray-800); }
+  .sidebar-header .badge { font-size: .58rem; background: var(--accent-light); color: #92400e; padding: 1px 6px; border-radius: 20px; font-weight: 600; margin-left: auto; }
+  .form-cat { font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-400); margin: 10px 0 3px 0; display: flex; align-items: center; gap: 4px; }
+  .form-cat .act { font-size: .65rem; text-transform: none; color: var(--primary-mid); cursor: pointer; font-weight: 600; margin-left: auto; }
+  .form-row { display: flex; gap: 5px; } .form-row > * { flex: 1; }
+  .form-g { margin-bottom: 3px; }
+  .form-g label { display: block; font-size: .65rem; font-weight: 600; color: var(--gray-600); margin-bottom: 1px; }
+  .form-g input, .form-g textarea, .form-g select { width: 100%; padding: 4px 7px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-xs); font-size: .73rem; font-family: inherit; transition: all .2s; background: var(--gray-50); color: var(--gray-800); }
+  .form-g input:focus, .form-g textarea:focus { border-color: var(--primary-mid); outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.12); background: white; }
+  .form-g textarea { min-height: 26px; resize: vertical; }
+  .sidebar-actions { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .btn { padding: 6px 10px; border: none; border-radius: var(--radius-sm); font-weight: 600; font-size: .75rem; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 4px; font-family: inherit; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--primary); color: white; } .btn-primary:hover { background: var(--primary-light); box-shadow: var(--shadow-md); }
+  .btn-success { background: var(--success); color: white; } .btn-success:hover { background: #059669; }
+  .btn-orange { background: var(--orange); color: white; } .btn-orange:hover { background: #ea580c; }
+  .btn-outline { background: transparent; color: var(--gray-600); border: 1.5px solid var(--gray-200); } .btn-outline:hover { background: var(--gray-50); }
+  .btn-sm { padding: 3px 7px; font-size: .7rem; }
+  .coll { margin-bottom: 1px; }
+  .coll .h { display: flex; align-items: center; gap: 3px; cursor: pointer; font-size: .67rem; font-weight: 600; color: var(--gray-500); padding: 2px 5px; border-radius: 3px; background: var(--gray-50); user-select: none; }
+  .coll .h:hover { background: var(--gray-100); }
+  .coll .b { padding: 3px 5px 0 5px; display: none; }
+  .coll.open .b { display: block; }
+  .coll .h .arr { transition: transform .2s; font-size: .55rem; }
+  .coll.open .h .arr { transform: rotate(90deg); }
+  #seancesContainer { margin-bottom: 3px; }
+  .sc { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-xs); padding: 5px 7px; margin-bottom: 3px; position: relative; }
+  .sc .num { font-size: .62rem; font-weight: 700; color: var(--primary-mid); margin-bottom: 1px; }
+  .sc .r { display: flex; gap: 3px; margin-bottom: 1px; } .sc .r input { flex: 1; }
+  .sc .del { position: absolute; top: 1px; right: 1px; background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: .8rem; line-height: 1; padding: 0 3px; border-radius: 2px; }
+  .sc .del:hover { background: var(--danger-light); color: var(--danger); }
+  .img-prev { max-width: 100%; max-height: 60px; border-radius: var(--radius-xs); margin-top: 2px; object-fit: cover; display: none; border: 1px solid var(--gray-200); }
+  .img-prev.show { display: block; }
+  .img-te { border-radius: var(--radius-xs); padding: 3px 5px; margin-top: 3px; background: var(--gray-50); border: 1px dashed var(--gray-300); display: flex; gap: 3px; }
+  .img-te input { flex: 1; font-size: .68rem; padding: 2px 5px; border: 1px solid var(--gray-200); border-radius: 3px; background: white; }
+  .img-te label { font-size: .6rem; color: var(--gray-400); white-space: nowrap; display: flex; align-items: center; }
+  .img-te input[type="file"] { flex: 1.3; font-size: .62rem; padding: 1px 2px; }
+  .main-content { flex: 1; padding: 16px 24px; display: flex; justify-content: center; }
+  .page-container { max-width: 1140px; width: 100%; }
+  .page { background: white; border-radius: var(--radius); box-shadow: var(--shadow-xl); overflow: hidden; }
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 30px; text-align: center; }
+  .empty-state .icon { font-size: 2.8rem; margin-bottom: 10px; opacity: .4; }
+  .empty-state h3 { font-size: 1rem; color: var(--gray-400); font-weight: 600; }
+  .page-header { background: linear-gradient(135deg, var(--primary), #1e3a8a); padding: 8px 18px; display: flex; justify-content: space-between; align-items: center; font-size: .7rem; color: rgba(255,255,255,.9); }
+  .page-footer { background: var(--gray-50); border-top: 1px solid var(--gray-200); padding: 5px 18px; display: flex; justify-content: space-between; font-size: .64rem; color: var(--gray-500); }
+  .title-page { padding: 26px 22px 20px; text-align: center; background: linear-gradient(180deg, var(--primary-surface), white 60%); position: relative; }
+  .title-page::after { content: ''; position: absolute; bottom: 0; left: 10%; right: 10%; height: 2px; background: linear-gradient(90deg, transparent, var(--primary-mid), transparent); }
+  .title-page h1 { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-bottom: 3px; letter-spacing: -1px; }
+  .title-page .subtitle { font-size: 1.1rem; font-weight: 600; color: var(--primary-mid); }
+  .title-page .theme { font-size: .95rem; color: var(--gray-600); font-weight: 500; margin-bottom: 10px; }
+  .title-page .info-line { font-size: .75rem; color: var(--gray-500); margin: 1px 0; }
+  .title-page .divider { margin: 10px auto; width: 70%; border: none; height: 2px; background: linear-gradient(90deg,transparent,var(--primary-mid),transparent); border-radius: 2px; }
+  .context-box { background: linear-gradient(135deg, var(--primary-surface), white); border: 1.5px solid var(--primary-mid); border-radius: var(--radius-sm); padding: 8px 14px; max-width: 620px; margin: 10px auto; font-size: .8rem; color: var(--gray-700); box-shadow: var(--shadow); position: relative; }
+  .context-box::before { content: '📌'; position: absolute; top: -7px; left: -7px; font-size: .8rem; background: white; padding: 1px 3px; border-radius: 4px; box-shadow: var(--shadow); }
+  .seance-table { margin: 10px auto; border-collapse: collapse; font-size: .74rem; border-radius: var(--radius-sm); overflow: hidden; box-shadow: var(--shadow); }
+  .seance-table th { background: var(--primary); color: white; padding: 5px 9px; font-weight: 600; font-size: .7rem; text-transform: uppercase; letter-spacing: .2px; }
+  .seance-table td { padding: 4px 9px; border-bottom: 1px solid var(--gray-100); background: white; }
+  .section { padding: 14px 22px; border-bottom: 1px solid var(--gray-100); }
+  .section-title { font-size: .95rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+  .section-title::before { content: ''; display: inline-block; width: 3px; height: 14px; background: var(--primary-mid); border-radius: 2px; }
+  .sub-title { font-size: .8rem; font-weight: 700; color: var(--gray-700); margin: 6px 0 3px 0; display: flex; align-items: center; gap: 4px; }
+  .tbox { border-radius: var(--radius-sm); padding: 8px 12px; margin: 5px 0; box-shadow: var(--shadow); }
+  .tbox-title { font-weight: 700; font-size: .75rem; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+  .tbox-info { background: linear-gradient(135deg, var(--primary-surface), white); border-left: 4px solid var(--primary-mid); } .tbox-info .tbox-title { color: var(--primary); }
+  .tbox-act { background: linear-gradient(135deg, var(--orange-light), white); border-left: 4px solid var(--orange); } .tbox-act .tbox-title { color: #9a3412; }
+  .tbox-eval { background: linear-gradient(135deg, var(--success-light), white); border-left: 4px solid var(--success); } .tbox-eval .tbox-title { color: #065f46; }
+  .tbox-trace { background: linear-gradient(135deg, var(--accent-light), white); border-left: 4px solid var(--accent); } .tbox-trace .tbox-title { color: #92400e; }
+  .tbox-imp { background: linear-gradient(135deg, var(--danger-light), white); border-left: 4px solid var(--danger); } .tbox-imp .tbox-title { color: #991b1b; }
+  .tbox-def { background: linear-gradient(135deg, #f0fdf4, white); border-left: 4px solid #22c55e; } .tbox-def .tbox-title { color: #166534; }
+  .tbox-prop { background: linear-gradient(135deg, #fef2f2, white); border-left: 4px solid var(--danger); } .tbox-prop .tbox-title { color: #991b1b; }
+  .tbox-ex { background: linear-gradient(135deg, #f5f3ff, white); border-left: 4px solid #8b5cf6; } .tbox-ex .tbox-title { color: #5b21b6; }
+  .bc { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; font-size: .6rem; flex-shrink: 0; }
+  .bc-info { background: var(--primary-surface); color: var(--primary-mid); }
+  .bc-act { background: var(--orange-light); color: #9a3412; }
+  .bc-eval { background: var(--success-light); color: #065f46; }
+  .bc-trace { background: var(--accent-light); color: #92400e; }
+  .bc-imp { background: var(--danger-light); color: #991b1b; }
+  .bc-def { background: #f0fdf4; color: #166534; }
+  .bc-prop { background: #fef2f2; color: #991b1b; }
+  .bc-ex { background: #f5f3ff; color: #5b21b6; }
+  .img-wrap { text-align: center; margin: 6px 0; padding: 4px; background: var(--gray-50); border-radius: var(--radius-xs); border: 1px dashed var(--gray-300); }
+  .img-wrap img { max-width: 100%; max-height: 160px; border-radius: var(--radius-xs); object-fit: contain; }
+  .img-wrap .cap { font-size: .68rem; color: var(--gray-400); margin-top: 2px; font-style: italic; }
+  .tbl { border-collapse: collapse; width: 100%; margin: 3px 0; font-size: .74rem; border-radius: var(--radius-xs); overflow: hidden; }
+  .tbl th { background: var(--gray-50); color: var(--gray-700); padding: 4px 7px; border: 1px solid var(--gray-200); text-align: left; font-weight: 600; font-size: .7rem; }
+  .tbl td { padding: 4px 7px; border: 1px solid var(--gray-200); vertical-align: top; }
+  .sig-tbl { margin: 5px auto; border-collapse: collapse; width: 55%; }
+  .sig-tbl th, .sig-tbl td { border: 1px solid var(--gray-300); padding: 3px 10px; }
+  .sig-tbl th { background: var(--gray-50); font-weight: 600; font-size: .72rem; }
+  .math { font-family: 'JetBrains Mono', monospace; font-style: italic; color: var(--primary); font-weight: 500; background: var(--primary-surface); padding: 1px 4px; border-radius: 3px; white-space: nowrap; font-size: .86em; }
+  .math-d { text-align: center; font-size: .86rem; margin: 3px 0; color: var(--primary); font-family: 'JetBrains Mono', monospace; padding: 3px; background: var(--gray-50); border-radius: var(--radius-xs); }
+  ul { padding-left: 14px; font-size: .8rem; }
+  ul.bsq { list-style: none; padding-left: 0; }
+  ul.bsq li { padding-left: 13px; position: relative; }
+  ul.bsq li::before { content: '▣'; position: absolute; left: 0; color: var(--primary-mid); font-size: .55rem; top: 2px; }
+  ul.btri { list-style: none; padding-left: 0; }
+  ul.btri li { padding-left: 13px; position: relative; }
+  ul.btri li::before { content: '▸'; position: absolute; left: 0; color: var(--primary); font-weight: 700; }
+  ol { padding-left: 16px; font-size: .8rem; } ol li { margin-bottom: 1px; }
+  .qbox { text-align: center; font-family: 'Playfair Display', serif; font-style: italic; color: var(--gray-500); padding: 5px; border-top: 1px solid var(--gray-200); margin-top: 5px; font-size: .8rem; }
+  .fe { text-align: center; padding: 10px; }
+  .fe hr { margin: 4px auto; border: none; height: 2px; background: linear-gradient(90deg,transparent,var(--primary-mid),transparent); width: 100%; border-radius: 2px; }
+  .fe .t { font-size: .78rem; font-weight: 700; color: var(--primary); letter-spacing: 2px; text-transform: uppercase; }
+  .fe .s { font-size: .7rem; color: var(--gray-400); margin-top: 2px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  @media (max-width: 1100px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 800px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  @media (max-width: 1000px) { .app-layout { flex-direction: column; } .sidebar { width: 100%; min-width: 100%; height: auto; position: static; } .main-content { padding: 10px; } }
+  .toast { position: fixed; bottom: 16px; right: 16px; background: var(--gray-900); color: white; padding: 7px 16px; border-radius: var(--radius-sm); font-size: .75rem; font-weight: 500; box-shadow: var(--shadow-lg); z-index: 999; opacity: 0; transform: translateY(20px); transition: all .3s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  @media print { .sidebar { display: none !important; } .main-content { padding: 0 !important; } .page { box-shadow: none; border-radius: 0; } .section, .tbox, .grid-2, .grid-3 { page-break-inside: avoid; } body { background: white; } .toast { display: none !important; } }
+</style>
 </head>
 <body>
-    <header>
-        <h1><i class="fas fa-chalkboard-teacher"></i> Créateur de Fiches de Leçons</h1>
-        <p class="app-description">Application permettant aux enseignants de créer des fiches de leçons dans toutes les matières et de les exporter en PDF</p>
-    </header>
-    
-    <div class="mobile-controls">
-        <button class="btn-info" onclick="toggleView('editor')">
-            <i class="fas fa-edit"></i> Éditeur
-        </button>
-        <button class="btn-success" onclick="toggleView('preview')">
-            <i class="fas fa-eye"></i> Aperçu
-        </button>
-    </div>
-    
-    <div class="container">
-        <div class="editor-panel" id="editor-panel">
-            <h2 class="panel-title"><i class="fas fa-edit"></i> Éditeur de leçon</h2>
-            
-            <div class="form-group">
-                <label for="school-name"><i class="fas fa-school"></i> Nom de l'établissement</label>
-                <input type="text" id="school-name" placeholder="Ex: Lycée Louis Pasteur">
-            </div>
-            
-            <div class="form-group">
-                <label><i class="fas fa-user-tie"></i> Nom de l'enseignant</label>
-                <div class="teacher-display">
-                    <i class="fas fa-user-tie"></i>
-                    <span id="teacher-name-display">KOLA Maniwah Essohouna</span>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="subject"><i class="fas fa-book"></i> Matière</label>
-                <input type="text" id="subject" placeholder="Ex: Mathématiques">
-            </div>
-            
-            <div class="form-group">
-                <label for="discipline"><i class="fas fa-graduation-cap"></i> Discipline</label>
-                <input type="text" id="discipline" placeholder="Ex: Géométrie">
-            </div>
-            
-            <div class="form-group">
-                <label for="lesson-theme"><i class="fas fa-palette"></i> Thème de la leçon</label>
-                <input type="text" id="lesson-theme" placeholder="Ex: Triangles et trigonométrie">
-            </div>
-            
-            <div class="form-group">
-                <label for="class-name"><i class="fas fa-users"></i> Classe/Niveau</label>
-                <input type="text" id="class-name" placeholder="Ex: Seconde 7">
-            </div>
-            
-            <div class="form-group">
-                <label><i class="fas fa-user-friends"></i> Effectif de la classe</label>
-                <div class="class-count">
-                    <div class="form-group">
-                        <label for="boys-count">Garçons</label>
-                        <input type="number" id="boys-count" min="0" value="0" oninput="updateClassTotal()">
-                    </div>
-                    <div class="form-group">
-                        <label for="girls-count">Filles</label>
-                        <input type="number" id="girls-count" min="0" value="0" oninput="updateClassTotal()">
-                    </div>
-                    <div class="class-count-item total">
-                        <div>Total</div>
-                        <div id="class-total">0</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="lesson-title"><i class="fas fa-heading"></i> Titre de la leçon</label>
-                <input type="text" id="lesson-title" placeholder="Ex: Théorèmes de Pythagore et de Thalès">
-            </div>
-            
-            <div class="form-group">
-                <label for="lesson-duration"><i class="fas fa-clock"></i> Durée de la leçon</label>
-                <input type="text" id="lesson-duration" placeholder="Ex: 4 heures">
-            </div>
-            
-            <div class="form-group">
-                <label for="lesson-date"><i class="fas fa-calendar-alt"></i> Date de la leçon</label>
-                <input type="date" id="lesson-date">
-            </div>
-            
-            <h3 class="panel-title"><i class="fas fa-plus-circle"></i> Ajouter des sections</h3>
-            
-            <div class="section-buttons">
-                <button class="btn-success" onclick="addSection('definition')">
-                    <i class="fas fa-bookmark"></i> Définition
-                </button>
-                <button class="btn-success" onclick="addSection('theorem')">
-                    <i class="fas fa-graduation-cap"></i> Théorème
-                </button>
-                <button class="btn-success" onclick="addSection('example')">
-                    <i class="fas fa-lightbulb"></i> Exemple
-                </button>
-                <button class="btn-success" onclick="addSection('exercise')">
-                    <i class="fas fa-pencil-alt"></i> Exercice
-                </button>
-                <button class="btn-info" onclick="addSection('problem')">
-                    <i class="fas fa-question-circle"></i> Problème
-                </button>
-                <button class="btn-info" onclick="addSection('student-work')">
-                    <i class="fas fa-user-graduate"></i> Travail élève
-                </button>
-                <button class="btn-info" onclick="addSection('solution')">
-                    <i class="fas fa-check-circle"></i> Solution
-                </button>
-                <button class="btn-warning" onclick="addSection('homework')">
-                    <i class="fas fa-tasks"></i> Devoir maison
-                </button>
-                <button class="btn-pink" onclick="addSection('prerequisites')">
-                    <i class="fas fa-layer-group"></i> Prérequis
-                </button>
-                <button class="btn-blue" onclick="addSection('materials')">
-                    <i class="fas fa-tools"></i> Matériel
-                </button>
-                <button class="btn-purple" onclick="addSection('strategy')">
-                    <i class="fas fa-chalkboard"></i> Stratégie
-                </button>
-                <button class="btn-warning" onclick="addImageSection()">
-                    <i class="fas fa-image"></i> Image
-                </button>
-            </div>
-            
-            <div class="content-blocks" id="content-blocks">
-                <!-- Les blocs de contenu seront ajoutés ici dynamiquement -->
-            </div>
-            
-            <div class="action-buttons">
-                <button class="btn-danger" onclick="resetLesson()">
-                    <i class="fas fa-trash"></i> Tout effacer
-                </button>
-                <button class="btn-purple" onclick="saveToLocalStorage()">
-                    <i class="fas fa-save"></i> Enregistrer
-                </button>
-                <button class="btn-info" onclick="exportToJson()">
-                    <i class="fas fa-file-export"></i> Exporter JSON
-                </button>
-                <button class="btn-warning" onclick="importFromJson()">
-                    <i class="fas fa-file-import"></i> Importer JSON
-                </button>
-                <button class="btn-success" onclick="generatePDF()">
-                    <i class="fas fa-file-pdf"></i> Générer PDF
-                </button>
-                <button class="btn-latex" onclick="generateLatex()">
-                    <i class="fas fa-file-download"></i> Télécharger LaTeX
-                </button>
-                <button class="btn-latex" onclick="showLatexCode()">
-                    <i class="fas fa-code"></i> Afficher LaTeX
-                </button>
-                <button class="btn-info" onclick="showViewOnlyPreview()">
-                    <i class="fas fa-expand"></i> Aperçu seul
-                </button>
-            </div>
-            
-            <div class="data-management">
-                <h3 class="panel-title"><i class="fas fa-filter"></i> Filtres de recherche</h3>
-                
-                <div class="filter-section">
-                    <div class="filter-row">
-                        <div class="form-group">
-                            <label for="filter-subject"><i class="fas fa-book"></i> Matière</label>
-                            <select id="filter-subject">
-                                <option value="">Toutes les matières</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="filter-discipline"><i class="fas fa-graduation-cap"></i> Discipline</label>
-                            <select id="filter-discipline">
-                                <option value="">Toutes les disciplines</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="filter-row">
-                        <div class="form-group">
-                            <label for="filter-date"><i class="fas fa-calendar-alt"></i> Date</label>
-                            <input type="date" id="filter-date">
-                        </div>
-                        <button class="btn-info" onclick="loadFilteredLessons()">
-                            <i class="fas fa-search"></i> Filtrer
-                        </button>
-                        <button class="btn-warning" onclick="clearFilters()">
-                            <i class="fas fa-times"></i> Effacer
-                        </button>
-                    </div>
-                </div>
-                
-                <h3 class="panel-title"><i class="fas fa-history"></i> Leçons enregistrées</h3>
-                <div class="saved-lessons" id="saved-lessons">
-                    <!-- Les leçons enregistrées apparaîtront ici -->
-                </div>
-            </div>
+
+<div class="toast" id="toast"></div>
+
+<div class="app-layout">
+  <div class="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-header">
+        <div class="logo">📋</div>
+        <div><h2>Générateur de Fiche Pédagogique</h2></div>
+        <span class="badge">v4.0</span>
+      </div>
+
+      <!-- 1 INFOS GÉNÉRALES -->
+      <div class="form-cat">① Informations générales</div>
+      <div class="form-row">
+        <div class="form-g"><label>École / CEG</label><input type="text" id="f_ecole" value="CEG MASSEDENA"></div>
+        <div class="form-g"><label>Classe</label><input type="text" id="f_classe" value="Classe de 6ème"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-g"><label>Effectif</label><input type="text" id="f_effectif" value="38 élèves"></div>
+        <div class="form-g"><label>Matière</label><input type="text" id="f_matiere" value="Mathématiques"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-g"><label>Enseignant</label><input type="text" id="f_enseignant" value="KOLA Maniwah Essohouna"></div>
+        <div class="form-g"><label>Date</label><input type="text" id="f_date" value="02/02/2026"></div>
+      </div>
+      <div class="form-g"><label>Durée totale</label><input type="text" id="f_duree" value="3 séances de 60 min"></div>
+      <div class="form-g"><label>Compétence visée</label><textarea id="f_competence" rows="1">Résoudre des problèmes faisant appel au calcul numérique dans des situations concrètes de la vie quotidienne africaine, en mobilisant la notion de fraction comme outil de modélisation et de résolution.</textarea></div>
+      <div class="form-row">
+        <div class="form-g"><label>Références</label><input type="text" id="f_references" value="Programme officiel de mathématiques 6ème, Socle commun"></div>
+        <div class="form-g"><label>Séquence</label><input type="text" id="f_sequence" value="Séquence 3 — Deuxième trimestre"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-g"><label>Domaine</label><input type="text" id="f_domaine" value="Nombres et calculs"></div>
+        <div class="form-g"><label>Thème</label><input type="text" id="f_theme" value="Nombres et Calculs"></div>
+      </div>
+      <div class="form-g"><label>Titre de la leçon</label><input type="text" id="f_titre" value="Les Fractions : Notion, Comparaison et Opérations de Base"></div>
+      <div class="form-g"><label>Contexte pédagogique</label><textarea id="f_contexte" rows="1">Cette séquence vise à construire progressivement la notion de fraction chez les élèves de 6ème à travers des situations concrètes du quotidien africain.</textarea></div>
+
+      <!-- 2 OBJECTIFS & PRÉREQUIS -->
+      <div class="form-cat">② Objectifs &amp; Prérequis</div>
+      <div class="form-g"><label>Objectifs (un par ligne)</label><textarea id="f_objectifs" rows="2">Reconnaître et identifier des fractions dans des contextes variés
+Représenter graphiquement des fractions à l'aide de supports variés
+Comparer et ranger des fractions en utilisant des stratégies adaptées
+Effectuer des opérations élémentaires sur les fractions
+Utiliser les fractions pour résoudre des problèmes de partage</textarea></div>
+      <div class="form-g"><label>Prérequis (un par ligne)</label><textarea id="f_prerequis" rows="2">Connaissance des nombres entiers naturels jusqu'à 1000
+Maîtrise des opérations de base (+, −, ×, ÷)
+Notion intuitive de partage équitable
+Lecture et écriture correcte des nombres</textarea></div>
+
+      <!-- 3 MATÉRIEL & STRATÉGIES -->
+      <div class="form-cat">③ Matériel &amp; Stratégies</div>
+      <div class="grid-2">
+        <div class="form-g"><label>Matériel concret</label><textarea id="f_matConcret" rows="1">Fruits (oranges, bananes, mangues)
+Bandes de papier de différentes longueurs
+Disques en carton fractionnés
+Billes, cailloux, graines</textarea></div>
+        <div class="form-g"><label>Supports pédagogiques</label><textarea id="f_matSupports" rows="1">Fiches d'exercices différenciées (3 niveaux)
+Planches illustrées sur le partage
+Tableau magnétique avec fractions aimantées
+Calculatrices simples</textarea></div>
+      </div>
+      <div class="form-g"><label>Stratégies pédagogiques</label><textarea id="f_strategies" rows="1">Approche inductive : partir de situations concrètes pour dégager les concepts
+Différenciation : adapter les activités selon les profils d'apprentissage
+Manipulation : utiliser systématiquement du matériel concret avant l'abstraction
+Travail collaboratif : alterner phases individuelles, en binômes et en groupes
+Métacognition : faire verbaliser les démarches et les stratégies
+Contextualisation : ancrer les apprentissages dans la réalité africaine</textarea></div>
+      <div class="form-g"><label>Adaptations pédagogiques</label><textarea id="f_adaptations" rows="1">Pour les élèves en difficulté : réduire la quantité d'exercices, accentuer la manipulation
+Pour les élèves avancés : problèmes complexes, recherche documentaire
+Pour les élèves à besoins éducatifs particuliers : supports adaptés, temps supplémentaire</textarea></div>
+
+      <!-- 4 SÉANCES -->
+      <div class="form-cat">④ Séances <span class="act" onclick="ajouterSeance()">+ Ajouter</span></div>
+      <div id="seancesContainer"></div>
+
+      <!-- 5 IMAGE -->
+      <div class="form-cat">⑤ Image</div>
+      <div class="form-row">
+        <div class="form-g" style="flex:2"><label>Fichier image</label><input type="file" id="f_image" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_image');apercuImage();"></div>
+        <div class="form-g" style="flex:1"><label>Position</label><select id="f_imagePos"><option value="after-title">Après titre</option><option value="after-context">Après contexte</option><option value="custom">Bloc libre</option></select></div>
+      </div>
+      <div class="form-g"><label>Légende</label><input type="text" id="f_imageLegende" placeholder="Légende"></div>
+      <div><img class="img-prev" id="imgPreview" alt=""></div>
+
+      <!-- 5b DÉROULEMENT -->
+      <div class="form-cat">⓹ Déroulement des activités</div>
+      <div class="form-g"><textarea id="f_deroulement" rows="2" placeholder="Une étape par ligne">Phase 1 : Rappel des prérequis et mise en situation (10 min)
+Phase 2 : Activité de découverte par manipulation guidée (15 min)
+Phase 3 : Mise en commun et institutionnalisation (10 min)
+Phase 4 : Exercices d'application et entraînement (15 min)
+Phase 5 : Synthèse, évaluation et remédiation (10 min)</textarea></div>
+
+      <!-- 6 TRACE ÉCRITE -->
+      <div class="form-cat">⑥ Trace écrite complète</div>
+      <div class="coll open"><div class="h" onclick="this.parentElement.classList.toggle('open')"><span class="arr">▶</span> Définition</div><div class="b"><div class="form-g"><textarea id="f_def" rows="1">Une fraction est un nombre qui représente une ou plusieurs parties d'une unité divisée en parts égales.</textarea></div><div class="img-te"><label>🖼</label><input type="file" id="f_defImg" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_defImg');generer();"><input type="text" id="f_defImgLeg" placeholder="Légende"></div></div></div>
+      <div class="coll open"><div class="h" onclick="this.parentElement.classList.toggle('open')"><span class="arr">▶</span> Théorème / Propriété</div><div class="b"><div class="form-g"><textarea id="f_prop" rows="1">Propriété 1 : Un même nombre fractionnaire peut s'écrire de différentes façons (fractions équivalentes).
+Propriété 2 : Si on multiplie ou divise le numérateur et le dénominateur par un même nombre non nul, on obtient une fraction égale.</textarea></div><div class="img-te"><label>🖼</label><input type="file" id="f_propImg" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_propImg');generer();"><input type="text" id="f_propImgLeg" placeholder="Légende"></div></div></div>
+      <div class="coll open"><div class="h" onclick="this.parentElement.classList.toggle('open')"><span class="arr">▶</span> Remarque</div><div class="b"><div class="form-g"><textarea id="f_remarque" rows="1">Remarque : Une fraction peut représenter un nombre entier lorsque le numérateur est un multiple du dénominateur. Une fraction dont le numérateur est inférieur au dénominateur est appelée fraction propre.</textarea></div><div class="img-te"><label>🖼</label><input type="file" id="f_remarqueImg" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_remarqueImg');generer();"><input type="text" id="f_remarqueImgLeg" placeholder="Légende"></div></div></div>
+      <div class="coll open"><div class="h" onclick="this.parentElement.classList.toggle('open')"><span class="arr">▶</span> Exemple</div><div class="b"><div class="form-g"><textarea id="f_exemple" rows="1">Exemple 1 : Dans un gâteau partagé en 8 parts égales, si on prend 3 parts, on a 3/8 du gâteau.
+Exemple 2 : 2/3 de 15 = (2 × 15) ÷ 3 = 30 ÷ 3 = 10.</textarea></div><div class="img-te"><label>🖼</label><input type="file" id="f_exempleImg" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_exempleImg');generer();"><input type="text" id="f_exempleImgLeg" placeholder="Légende"></div></div></div>
+      <div class="coll open"><div class="h" onclick="this.parentElement.classList.toggle('open')"><span class="arr">▶</span> Activité</div><div class="b"><div class="form-g"><textarea id="f_activite" rows="1">Activité : À l'aide de bandes de papier, représenter les fractions 1/2, 1/4, 3/4 et 2/3. Comparer les longueurs obtenues et classer ces fractions par ordre croissant.</textarea></div><div class="img-te"><label>🖼</label><input type="file" id="f_activiteImg" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_activiteImg');generer();"><input type="text" id="f_activiteImgLeg" placeholder="Légende"></div></div></div>
+      <div class="coll open"><div class="h" onclick="this.parentElement.classList.toggle('open')"><span class="arr">▶</span> Solution activité</div><div class="b"><div class="form-g"><textarea id="f_solActivite" rows="1">Solution : 1/4 = 0,25 ; 1/2 = 0,5 ; 2/3 ≈ 0,67 ; 3/4 = 0,75. Ordre croissant : 1/4 < 1/2 < 2/3 < 3/4.</textarea></div><div class="img-te"><label>🖼</label><input type="file" id="f_solActiviteImg" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_solActiviteImg');generer();"><input type="text" id="f_solActiviteImgLeg" placeholder="Légende"></div></div></div>
+      <div class="coll open"><div class="h" onclick="this.parentElement.classList.toggle('open')"><span class="arr">▶</span> Exercice d'application</div><div class="b"><div class="form-g"><textarea id="f_exoApp" rows="1">1. Simplifier : 12/18, 20/25, 36/48.
+2. Calculer : 4/11 + 5/11 - 2/11.
+3. Un fermier vend 2/5 de sa récolte le matin et 1/4 l'après-midi. Fraction totale vendue ?</textarea></div><div class="img-te"><label>🖼</label><input type="file" id="f_exoAppImg" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_exoAppImg');generer();"><input type="text" id="f_exoAppImgLeg" placeholder="Légende"></div></div></div>
+      <div class="coll open"><div class="h" onclick="this.parentElement.classList.toggle('open')"><span class="arr">▶</span> Solution exercices</div><div class="b"><div class="form-g"><textarea id="f_solExo" rows="1">1. 12/18 = 2/3 ; 20/25 = 4/5 ; 36/48 = 3/4.
+2. 4/11 + 5/11 - 2/11 = 7/11.
+3. 2/5 + 1/4 = 8/20 + 5/20 = 13/20.</textarea></div><div class="img-te"><label>🖼</label><input type="file" id="f_solExoImg" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_solExoImg');generer();"><input type="text" id="f_solExoImgLeg" placeholder="Légende"></div></div></div>
+      <div class="coll open"><div class="h" onclick="this.parentElement.classList.toggle('open')"><span class="arr">▶</span> Exercice de maison</div><div class="b"><div class="form-g"><textarea id="f_exoMaison" rows="1">Devoir : Famille Traoré.
+- 30 poulets à partager entre 5 familles
+- 48 L de boisson (verres de 1/3 L)
+- 60 sachets sucre : 2/5 pour le thé, 1/4 pour les gâteaux. Reste ?</textarea></div><div class="img-te"><label>🖼</label><input type="file" id="f_exoMaisonImg" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_exoMaisonImg');generer();"><input type="text" id="f_exoMaisonImgLeg" placeholder="Légende"></div></div></div>
+      <div class="coll open"><div class="h" onclick="this.parentElement.classList.toggle('open')"><span class="arr">▶</span> Solution devoir</div><div class="b"><div class="form-g"><textarea id="f_solMaison" rows="1">1. 1/5 → 6 poulets/famille.
+2. 48 ÷ 1/3 = 144 verres.
+3. Thé : 60×2/5=24 ; Gâteaux : 60×1/4=15.
+4. Reste : 7/20 → 21 sachets.</textarea></div><div class="img-te"><label>🖼</label><input type="file" id="f_solMaisonImg" accept="image/jpeg,image/png,image/webp" onchange="loadImg('f_solMaisonImg');generer();"><input type="text" id="f_solMaisonImgLeg" placeholder="Légende"></div></div></div>
+
+      <!-- 7 CAPACITÉS VISÉES -->
+      <div class="form-cat">⑦ Capacités visées</div>
+      <div class="grid-2">
+        <div class="form-g"><label>Capacités col.1 (un par ligne)</label><textarea id="f_cap1" rows="2">Représenter : Traduire une fraction sous forme graphique, numérique et concrète
+Comparer : Utiliser des stratégies adaptées pour comparer et ordonner
+Calculer : Maîtriser les opérations élémentaires avec précision
+Résoudre : Appliquer les fractions à des problèmes du quotidien</textarea></div>
+        <div class="form-g"><label>Capacités col.2 (un par ligne)</label><textarea id="f_cap2" rows="2">Communiquer : Exprimer clairement sa démarche avec un vocabulaire adapté
+Modéliser : Traduire une situation réelle en langage mathématique
+Raisonner : Justifier ses choix et vérifier la cohérence des résultats
+Autonomiser : Développer des méthodes de travail personnelles</textarea></div>
+      </div>
+
+      <!-- 8 ÉVALUATION -->
+      <div class="form-cat">⑧ Modalités d'évaluation</div>
+      <div class="form-g"><textarea id="f_evalForm" rows="1" placeholder="Évaluation formative">Observation directe de la participation et de la manipulation
+Questionnement : questions orales ciblées, explications des démarches
+Exercices au tableau : correction immédiate avec rétroaction
+Auto-évaluation : fiche de positionnement après chaque séance</textarea></div>
+      <div class="form-g"><textarea id="f_evalSom" rows="1" placeholder="Évaluation sommative">Fiche d'exercices notés (coefficient 1) — 30 minutes
+Résolution de problème contextualisé (coefficient 2) — 45 minutes
+Présentation orale d'une démarche de résolution (coefficient 1)
+Questionnaire de synthèse (coefficient 3) — 60 minutes</textarea></div>
+      <div class="form-g"><textarea id="f_evalCrit" rows="1" placeholder="Critères">Exactitude des calculs et des représentations (40 %)
+Pertinence des méthodes utilisées (25 %)
+Clarté des explications et du vocabulaire (20 %)
+Capacité à appliquer dans des situations nouvelles (10 %)
+Autonomie et prise d'initiative (5 %)</textarea></div>
+
+      <!-- 9 CONTEXTE AFRICAIN -->
+      <div class="form-cat">⑨ Contexte africain &amp; Liens</div>
+      <div class="grid-2">
+        <div class="form-g"><label>Domaines d'application</label><textarea id="f_domaines" rows="1">Alimentation : Partage de nourriture, recettes traditionnelles
+Commerce : Mesures au marché, calcul des prix
+Agriculture : Répartition des récoltes, surfaces cultivables
+Artisanat : Proportions dans la fabrication, mesures</textarea></div>
+        <div class="form-g"><label>Liens transdisciplinaires</label><textarea id="f_liens" rows="1">SVT : Proportion dans l'alimentation, croissance
+Géographie : Répartition des ressources, démographie
+Histoire : Mesures anciennes, systèmes de comptage
+Éducation civique : Partage équitable, solidarité</textarea></div>
+      </div>
+      <div class="form-g"><textarea id="f_exemples" rows="1" placeholder="Exemples concrets">Partager 24 ignames entre 8 familles de façon équitable
+Mesurer 3/4 kg de riz avec une balance traditionnelle
+Calculer la part de chacun dans une tontine de 12 personnes avec 60 000 FCFA</textarea></div>
+
+      <!-- 10 ANNEXES -->
+      <div class="form-cat">⑩ Annexes pédagogiques</div>
+      <div class="form-g"><textarea id="f_diffDif" rows="1" placeholder="Élèves en difficulté">Utilisation systématique de matériel concret
+Fractions simples (1/2, 1/3, 1/4)
+Énoncés courts et illustrés
+Tutorat par des élèves avancés</textarea></div>
+      <div class="form-g"><textarea id="f_diffAv" rows="1" placeholder="Élèves avancés">Problèmes complexes en plusieurs étapes
+Introduction aux fractions décimales
+Création d'exercices pour les camarades
+Projets interdisciplinaires</textarea></div>
+      <div class="form-g"><textarea id="f_ressources" rows="1" placeholder="Ressources complémentaires">Manuel de mathématiques 6ème
+Fiches de travail photocopiables
+Matériel de manipulation à fabriquer
+Vidéos éducatives sur les fractions</textarea></div>
+      <div class="form-g"><textarea id="f_remarquesFin" rows="1" placeholder="Remarques finales">Insister sur le sens avant la technique
+Valoriser toutes les démarches de résolution
+Faire verbaliser les difficultés rencontrées
+Maintenir un lien constant avec le concret</textarea></div>
+
+      <!-- ACTIONS -->
+      <div class="sidebar-actions">
+        <button class="btn btn-primary" onclick="generer()">⚡ GÉNÉRER LA FICHE COMPLÈTE</button>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-success" onclick="window.print()" style="flex:1">🖨 Imprimer</button>
+          <button class="btn btn-orange" onclick="exporterLatex()" style="flex:1">📄 LaTeX</button>
         </div>
-        
-        <div class="preview-panel" id="preview-panel">
-            <h2 class="panel-title"><i class="fas fa-eye"></i> Aperçu de la leçon</h2>
-            
-            <div class="lesson-preview" id="lesson-preview">
-                <div class="preview-header">
-                    <div class="school-name" id="preview-school">Nom de l'établissement</div>
-                    <h1 class="lesson-title" id="preview-title">Titre de la leçon</h1>
-                    <p id="preview-subject">Matière: [Matière]</p>
-                    <p id="preview-theme">Thème: [Thème]</p>
-                    
-                    <div class="header-info">
-                        <div class="info-item">
-                            <i class="fas fa-user-tie"></i>
-                            <span id="preview-teacher">KOLA Maniwah Essohouna</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-users"></i>
-                            <span id="preview-class">Classe: [Classe]</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-clock"></i>
-                            <span id="preview-duration">Durée: [Durée]</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span id="preview-date">Date: [Date]</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="preview-content" id="preview-content">
-                    <!-- Le contenu de la leçon apparaîtra ici -->
-                </div>
-            </div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-outline btn-sm" onclick="exporterHTML()" style="flex:1">💾 HTML</button>
+          <button class="btn btn-outline btn-sm" onclick="if(confirm('Réinitialiser tous les champs ?')){resetTout()}" style="flex:1">↺ Reset</button>
         </div>
+      </div>
     </div>
-    
-    <script>
-        // Variables globales
-        let currentLesson = {
-            schoolName: '',
-            subject: '',
-            discipline: '',
-            lessonTheme: '',
-            className: '',
-            boysCount: 0,
-            girlsCount: 0,
-            lessonTitle: '',
-            lessonDuration: '',
-            lessonDate: '',
-            content: []
-        };
-        
-        let sectionCounter = 0;
-        let subsectionCounter = 0;
-        
-        // Initialisation
-        document.addEventListener('DOMContentLoaded', function() {
-            // Définir la date d'aujourd'hui par défaut
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('lesson-date').value = today;
-            
-            // Charger les leçons enregistrées
-            loadSavedLessons();
-            
-            // Mettre à jour l'aperçu
-            updatePreview();
-            
-            // Mettre à jour le total de la classe
-            updateClassTotal();
-        });
-        
-        // Fonction pour mettre à jour le total de la classe
-        function updateClassTotal() {
-            const boys = parseInt(document.getElementById('boys-count').value) || 0;
-            const girls = parseInt(document.getElementById('girls-count').value) || 0;
-            document.getElementById('class-total').textContent = boys + girls;
-        }
-        
-        // Fonction pour ajouter une section de contenu
-        function addSection(type) {
-            sectionCounter++;
-            const sectionId = `section-${sectionCounter}`;
-            let sectionTitle = '';
-            let placeholder = '';
-            let icon = '';
-            
-            switch(type) {
-                case 'definition':
-                    sectionTitle = 'Définition';
-                    placeholder = 'Saisissez votre définition ici...';
-                    icon = 'fas fa-bookmark';
-                    break;
-                case 'theorem':
-                    sectionTitle = 'Théorème';
-                    placeholder = 'Saisissez votre théorème ici...';
-                    icon = 'fas fa-graduation-cap';
-                    break;
-                case 'example':
-                    sectionTitle = 'Exemple';
-                    placeholder = 'Saisissez votre exemple ici...';
-                    icon = 'fas fa-lightbulb';
-                    break;
-                case 'exercise':
-                    sectionTitle = 'Exercice';
-                    placeholder = 'Saisissez votre exercice ici...';
-                    icon = 'fas fa-pencil-alt';
-                    break;
-                case 'problem':
-                    sectionTitle = 'Problème';
-                    placeholder = 'Saisissez votre problème ici...';
-                    icon = 'fas fa-question-circle';
-                    break;
-                case 'student-work':
-                    sectionTitle = 'Travail élève';
-                    placeholder = 'Décrivez le travail de l\'élève ici...';
-                    icon = 'fas fa-user-graduate';
-                    break;
-                case 'solution':
-                    sectionTitle = 'Solution';
-                    placeholder = 'Saisissez la solution ici...';
-                    icon = 'fas fa-check-circle';
-                    break;
-                case 'homework':
-                    sectionTitle = 'Devoir maison';
-                    placeholder = 'Saisissez le devoir maison ici...';
-                    icon = 'fas fa-tasks';
-                    break;
-                case 'prerequisites':
-                    sectionTitle = 'Prérequis';
-                    placeholder = 'Listez les prérequis ici...';
-                    icon = 'fas fa-layer-group';
-                    break;
-                case 'materials':
-                    sectionTitle = 'Matériel nécessaire';
-                    placeholder = 'Listez le matériel nécessaire ici...';
-                    icon = 'fas fa-tools';
-                    break;
-                case 'strategy':
-                    sectionTitle = 'Stratégie pédagogique';
-                    placeholder = 'Décrivez votre stratégie pédagogique ici...';
-                    icon = 'fas fa-chalkboard';
-                    break;
-                case 'image':
-                    sectionTitle = 'Image';
-                    placeholder = '';
-                    icon = 'fas fa-image';
-                    break;
-            }
-            
-            const contentBlocks = document.getElementById('content-blocks');
-            
-            const sectionHTML = `
-                <div class="content-block" id="${sectionId}" data-type="${type}">
-                    <div class="block-header">
-                        <div class="block-title">
-                            <i class="${icon}"></i> ${sectionTitle}
-                        </div>
-                        <div class="block-actions">
-                            <button class="format-btn" onclick="moveSectionUp('${sectionId}')" title="Déplacer vers le haut">
-                                <i class="fas fa-arrow-up"></i>
-                            </button>
-                            <button class="format-btn" onclick="moveSectionDown('${sectionId}')" title="Déplacer vers le bas">
-                                <i class="fas fa-arrow-down"></i>
-                            </button>
-                            <button class="format-btn" onclick="removeSection('${sectionId}')" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    ${type === 'image' ? `
-                        <div class="form-group">
-                            <label for="${sectionId}-image">Choisir une image</label>
-                            <input type="file" id="${sectionId}-image" accept="image/*" onchange="previewImage(this, '${sectionId}')">
-                        </div>
-                        <img id="${sectionId}-preview" class="image-preview" alt="Aperçu de l'image">
-                        <div class="form-group">
-                            <label for="${sectionId}-caption">Légende de l'image</label>
-                            <input type="text" id="${sectionId}-caption" placeholder="Légende de l'image...">
-                        </div>
-                    ` : `
-                        <div class="numbering-controls">
-                            <button class="numbering-btn" onclick="setNumberingType('${sectionId}', 'none')" id="${sectionId}-none">Sans numéro</button>
-                            <button class="numbering-btn" onclick="setNumberingType('${sectionId}', 'roman')" id="${sectionId}-roman">Chiffres romains</button>
-                            <button class="numbering-btn" onclick="setNumberingType('${sectionId}', 'letter')" id="${sectionId}-letter">Lettres majuscules</button>
-                        </div>
-                        <div class="alignment-controls">
-                            <button class="alignment-btn" onclick="setAlignment('${sectionId}', 'left')" id="${sectionId}-left" title="Aligner à gauche">
-                                <i class="fas fa-align-left"></i>
-                            </button>
-                            <button class="alignment-btn" onclick="setAlignment('${sectionId}', 'center')" id="${sectionId}-center" title="Centrer">
-                                <i class="fas fa-align-center"></i>
-                            </button>
-                            <button class="alignment-btn" onclick="setAlignment('${sectionId}', 'right')" id="${sectionId}-right" title="Aligner à droite">
-                                <i class="fas fa-align-right"></i>
-                            </button>
-                        </div>
-                        <div class="formatting-toolbar">
-                            <button class="format-btn" onclick="formatText('${sectionId}', 'bold')" title="Gras">
-                                <i class="fas fa-bold"></i>
-                            </button>
-                            <button class="format-btn" onclick="formatText('${sectionId}', 'italic')" title="Italique">
-                                <i class="fas fa-italic"></i>
-                            </button>
-                            <button class="format-btn" onclick="formatText('${sectionId}', 'underline')" title="Souligné">
-                                <i class="fas fa-underline"></i>
-                            </button>
-                            <button class="color-btn red" onclick="setTextColor('${sectionId}', 'red')" title="Rouge"></button>
-                            <button class="color-btn green" onclick="setTextColor('${sectionId}', 'green')" title="Vert"></button>
-                            <button class="color-btn blue" onclick="setTextColor('${sectionId}', 'blue')" title="Bleu"></button>
-                            <button class="color-btn black" onclick="setTextColor('${sectionId}', 'black')" title="Noir"></button>
-                        </div>
-                        <div class="form-group">
-                            <div class="text-editor" id="${sectionId}-editor" contenteditable="true" placeholder="${placeholder}"></div>
-                        </div>
-                    `}
-                </div>
-            `;
-            
-            contentBlocks.insertAdjacentHTML('beforeend', sectionHTML);
-            
-            // Initialiser les contrôles de numérotation et d'alignement
-            setNumberingType(sectionId, 'none');
-            setAlignment(sectionId, 'left');
-            
-            updatePreview();
-        }
-        
-        // Fonction pour ajouter une section d'image
-        function addImageSection() {
-            addSection('image');
-        }
-        
-        // Fonction pour définir le type de numérotation
-        function setNumberingType(sectionId, type) {
-            const section = document.getElementById(sectionId);
-            section.dataset.numbering = type;
-            
-            // Mettre à jour l'apparence des boutons
-            document.getElementById(`${sectionId}-none`).classList.toggle('active', type === 'none');
-            document.getElementById(`${sectionId}-roman`).classList.toggle('active', type === 'roman');
-            document.getElementById(`${sectionId}-letter`).classList.toggle('active', type === 'letter');
-            
-            updatePreview();
-        }
-        
-        // Fonction pour définir l'alignement du texte
-        function setAlignment(sectionId, alignment) {
-            const section = document.getElementById(sectionId);
-            section.dataset.alignment = alignment;
-            
-            // Mettre à jour l'apparence des boutons
-            document.getElementById(`${sectionId}-left`).classList.toggle('active', alignment === 'left');
-            document.getElementById(`${sectionId}-center`).classList.toggle('active', alignment === 'center');
-            document.getElementById(`${sectionId}-right`).classList.toggle('active', alignment === 'right');
-            
-            updatePreview();
-        }
-        
-        // Fonction pour formater le texte (gras, italique, souligné)
-        function formatText(sectionId, format) {
-            const editor = document.getElementById(`${sectionId}-editor`);
-            document.execCommand(format, false, null);
-            editor.focus();
-        }
-        
-        // Fonction pour définir la couleur du texte
-        function setTextColor(sectionId, color) {
-            const editor = document.getElementById(`${sectionId}-editor`);
-            document.execCommand('styleWithCSS', false, true);
-            document.execCommand('foreColor', false, getColorValue(color));
-            editor.focus();
-            
-            // Mettre à jour l'apparence des boutons de couleur
-            const colorButtons = document.querySelectorAll(`#${sectionId} .color-btn`);
-            colorButtons.forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.classList.contains(color)) {
-                    btn.classList.add('active');
-                }
-            });
-        }
-        
-        // Fonction pour obtenir la valeur hexadécimale de la couleur
-        function getColorValue(color) {
-            switch(color) {
-                case 'red': return '#e63946';
-                case 'green': return '#2a9d8f';
-                case 'blue': return '#4361ee';
-                case 'black': return '#212529';
-                default: return '#212529';
-            }
-        }
-        
-        // Fonction pour prévisualiser une image
-        function previewImage(input, sectionId) {
-            const preview = document.getElementById(`${sectionId}-preview`);
-            const file = input.files[0];
-            
-            if (file) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                }
-                
-                reader.readAsDataURL(file);
-            } else {
-                preview.style.display = 'none';
-            }
-            
-            updatePreview();
-        }
-        
-        // Fonction pour supprimer une section
-        function removeSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            section.remove();
-            updatePreview();
-        }
-        
-        // Fonction pour déplacer une section vers le haut
-        function moveSectionUp(sectionId) {
-            const section = document.getElementById(sectionId);
-            const previousSection = section.previousElementSibling;
-            
-            if (previousSection) {
-                section.parentNode.insertBefore(section, previousSection);
-                updatePreview();
-            }
-        }
-        
-        // Fonction pour déplacer une section vers le bas
-        function moveSectionDown(sectionId) {
-            const section = document.getElementById(sectionId);
-            const nextSection = section.nextElementSibling;
-            
-            if (nextSection) {
-                section.parentNode.insertBefore(nextSection, section);
-                updatePreview();
-            }
-        }
-        
-        // Fonction pour mettre à jour l'aperçu
-        function updatePreview() {
-            // Mettre à jour les informations de base
-            document.getElementById('preview-school').textContent = document.getElementById('school-name').value || 'Nom de l\'établissement';
-            document.getElementById('preview-title').textContent = document.getElementById('lesson-title').value || 'Titre de la leçon';
-            document.getElementById('preview-subject').textContent = `Matière: ${document.getElementById('subject').value || '[Matière]'}`;
-            document.getElementById('preview-theme').textContent = `Thème: ${document.getElementById('lesson-theme').value || '[Thème]'}`;
-            document.getElementById('preview-class').textContent = `Classe: ${document.getElementById('class-name').value || '[Classe]'}`;
-            document.getElementById('preview-duration').textContent = `Durée: ${document.getElementById('lesson-duration').value || '[Durée]'}`;
-            document.getElementById('preview-date').textContent = `Date: ${formatDate(document.getElementById('lesson-date').value) || '[Date]'}`;
-            
-            // Mettre à jour le contenu
-            const previewContent = document.getElementById('preview-content');
-            previewContent.innerHTML = '';
-            
-            // Réinitialiser les compteurs pour la numérotation
-            sectionCounter = 0;
-            subsectionCounter = 0;
-            
-            // Parcourir toutes les sections et les ajouter à l'aperçu
-            const contentBlocks = document.getElementById('content-blocks');
-            const sections = contentBlocks.querySelectorAll('.content-block');
-            
-            sections.forEach(section => {
-                const sectionType = section.dataset.type;
-                const numberingType = section.dataset.numbering || 'none';
-                const alignment = section.dataset.alignment || 'left';
-                
-                let sectionHTML = '';
-                let sectionClass = '';
-                let sectionIcon = '';
-                let sectionTitle = '';
-                
-                switch(sectionType) {
-                    case 'definition':
-                        sectionClass = 'definition';
-                        sectionIcon = 'fas fa-bookmark';
-                        sectionTitle = 'Définition';
-                        break;
-                    case 'theorem':
-                        sectionClass = 'theorem';
-                        sectionIcon = 'fas fa-graduation-cap';
-                        sectionTitle = 'Théorème';
-                        break;
-                    case 'example':
-                        sectionClass = 'example';
-                        sectionIcon = 'fas fa-lightbulb';
-                        sectionTitle = 'Exemple';
-                        break;
-                    case 'exercise':
-                        sectionClass = 'exercise';
-                        sectionIcon = 'fas fa-pencil-alt';
-                        sectionTitle = 'Exercice';
-                        break;
-                    case 'problem':
-                        sectionClass = 'problem';
-                        sectionIcon = 'fas fa-question-circle';
-                        sectionTitle = 'Problème';
-                        break;
-                    case 'student-work':
-                        sectionClass = 'student-work';
-                        sectionIcon = 'fas fa-user-graduate';
-                        sectionTitle = 'Travail élève';
-                        break;
-                    case 'solution':
-                        sectionClass = 'solution';
-                        sectionIcon = 'fas fa-check-circle';
-                        sectionTitle = 'Solution';
-                        break;
-                    case 'homework':
-                        sectionClass = 'homework';
-                        sectionIcon = 'fas fa-tasks';
-                        sectionTitle = 'Devoir maison';
-                        break;
-                    case 'prerequisites':
-                        sectionClass = 'prerequisites';
-                        sectionIcon = 'fas fa-layer-group';
-                        sectionTitle = 'Prérequis';
-                        break;
-                    case 'materials':
-                        sectionClass = 'materials';
-                        sectionIcon = 'fas fa-tools';
-                        sectionTitle = 'Matériel nécessaire';
-                        break;
-                    case 'strategy':
-                        sectionClass = 'strategy';
-                        sectionIcon = 'fas fa-chalkboard';
-                        sectionTitle = 'Stratégie pédagogique';
-                        break;
-                    case 'image':
-                        sectionClass = 'image';
-                        sectionIcon = 'fas fa-image';
-                        sectionTitle = 'Image';
-                        break;
-                }
-                
-                if (sectionType === 'image') {
-                    const imageInput = section.querySelector('input[type="file"]');
-                    const imagePreview = section.querySelector('.image-preview');
-                    const captionInput = section.querySelector('input[type="text"]');
-                    
-                    if (imagePreview && imagePreview.style.display !== 'none') {
-                        sectionHTML = `
-                            <div class="${sectionClass}">
-                                <div class="section-title">
-                                    <i class="${sectionIcon}"></i> ${sectionTitle}
-                                </div>
-                                <img src="${imagePreview.src}" class="preview-image" alt="Image de la leçon">
-                                <p class="${alignment}">${captionInput.value || ''}</p>
-                            </div>
-                        `;
-                    }
-                } else {
-                    const editor = section.querySelector('.text-editor');
-                    if (editor) {
-                        let titleHTML = '';
-                        
-                        // Appliquer la numérotation si nécessaire
-                        if (numberingType !== 'none') {
-                            sectionCounter++;
-                            
-                            if (numberingType === 'roman') {
-                                titleHTML = `
-                                    <div class="section-title numbered-title">
-                                        <i class="${sectionIcon}"></i> ${sectionTitle}
-                                    </div>
-                                `;
-                            } else if (numberingType === 'letter') {
-                                titleHTML = `
-                                    <div class="section-title numbered-subtitle">
-                                        <i class="${sectionIcon}"></i> ${sectionTitle}
-                                    </div>
-                                `;
-                            }
-                        } else {
-                            titleHTML = `
-                                <div class="section-title">
-                                    <i class="${sectionIcon}"></i> ${sectionTitle}
-                                </div>
-                            `;
-                        }
-                        
-                        sectionHTML = `
-                            <div class="${sectionClass}">
-                                ${titleHTML}
-                                <div class="${alignment}">${editor.innerHTML || '<p>Contenu de la section...</p>'}</div>
-                            </div>
-                        `;
-                    }
-                }
-                
-                if (sectionHTML) {
-                    previewContent.insertAdjacentHTML('beforeend', sectionHTML);
-                }
-            });
-            
-            // Appliquer les styles CSS pour la numérotation
-            const style = document.createElement('style');
-            style.textContent = `
-                .numbered-title::before {
-                    content: counter(section, upper-roman) ". ";
-                }
-                .numbered-subtitle::before {
-                    content: counter(subsection, lower-alpha) ". ";
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
-        // Fonction pour formater la date
-        function formatDate(dateString) {
-            if (!dateString) return '';
-            
-            const date = new Date(dateString);
-            return date.toLocaleDateString('fr-FR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
-        }
-        
-        // Fonction pour basculer entre l'éditeur et l'aperçu (version mobile)
-        function toggleView(view) {
-            const editorPanel = document.getElementById('editor-panel');
-            const previewPanel = document.getElementById('preview-panel');
-            
-            if (view === 'editor') {
-                editorPanel.style.display = 'block';
-                previewPanel.style.display = 'none';
-            } else {
-                editorPanel.style.display = 'none';
-                previewPanel.style.display = 'block';
-            }
-        }
-        
-        // Fonction pour réinitialiser la leçon
-        function resetLesson() {
-            if (confirm('Êtes-vous sûr de vouloir effacer toute la leçon ? Cette action est irréversible.')) {
-                document.getElementById('content-blocks').innerHTML = '';
-                updatePreview();
-            }
-        }
-        
-        // Fonction pour enregistrer dans le stockage local
-        function saveToLocalStorage() {
-            // Récupérer les données du formulaire
-            currentLesson.schoolName = document.getElementById('school-name').value;
-            currentLesson.subject = document.getElementById('subject').value;
-            currentLesson.discipline = document.getElementById('discipline').value;
-            currentLesson.lessonTheme = document.getElementById('lesson-theme').value;
-            currentLesson.className = document.getElementById('class-name').value;
-            currentLesson.boysCount = parseInt(document.getElementById('boys-count').value) || 0;
-            currentLesson.girlsCount = parseInt(document.getElementById('girls-count').value) || 0;
-            currentLesson.lessonTitle = document.getElementById('lesson-title').value;
-            currentLesson.lessonDuration = document.getElementById('lesson-duration').value;
-            currentLesson.lessonDate = document.getElementById('lesson-date').value;
-            
-            // Récupérer le contenu des sections
-            currentLesson.content = [];
-            const sections = document.querySelectorAll('.content-block');
-            
-            sections.forEach(section => {
-                const sectionType = section.dataset.type;
-                const numberingType = section.dataset.numbering || 'none';
-                const alignment = section.dataset.alignment || 'left';
-                
-                if (sectionType === 'image') {
-                    const imageInput = section.querySelector('input[type="file"]');
-                    const imagePreview = section.querySelector('.image-preview');
-                    const captionInput = section.querySelector('input[type="text"]');
-                    
-                    if (imagePreview && imagePreview.style.display !== 'none') {
-                        currentLesson.content.push({
-                            type: sectionType,
-                            imageSrc: imagePreview.src,
-                            caption: captionInput.value,
-                            alignment: alignment
-                        });
-                    }
-                } else {
-                    const editor = section.querySelector('.text-editor');
-                    if (editor) {
-                        currentLesson.content.push({
-                            type: sectionType,
-                            text: editor.innerHTML,
-                            numbering: numberingType,
-                            alignment: alignment
-                        });
-                    }
-                }
-            });
-            
-            // Générer un ID unique pour la leçon
-            const lessonId = 'lesson_' + Date.now();
-            
-            // Récupérer les leçons existantes
-            let savedLessons = JSON.parse(localStorage.getItem('savedLessons')) || [];
-            
-            // Ajouter la nouvelle leçon
-            savedLessons.push({
-                id: lessonId,
-                ...currentLesson,
-                timestamp: new Date().toISOString()
-            });
-            
-            // Enregistrer dans le stockage local
-            localStorage.setItem('savedLessons', JSON.stringify(savedLessons));
-            
-            alert('Leçon enregistrée avec succès !');
-            
-            // Recharger la liste des leçons enregistrées
-            loadSavedLessons();
-        }
-        
-        // Fonction pour charger les leçons enregistrées
-        function loadSavedLessons() {
-            const savedLessons = JSON.parse(localStorage.getItem('savedLessons')) || [];
-            const savedLessonsContainer = document.getElementById('saved-lessons');
-            
-            savedLessonsContainer.innerHTML = '';
-            
-            if (savedLessons.length === 0) {
-                savedLessonsContainer.innerHTML = '<p style="text-align: center; padding: 20px;">Aucune leçon enregistrée</p>';
-                return;
-            }
-            
-            savedLessons.forEach(lesson => {
-                const lessonDate = new Date(lesson.timestamp);
-                const formattedDate = lessonDate.toLocaleDateString('fr-FR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                const lessonItem = document.createElement('div');
-                lessonItem.className = 'lesson-item';
-                lessonItem.innerHTML = `
-                    <div class="lesson-info">
-                        <div class="lesson-title-small">${lesson.lessonTitle || 'Sans titre'}</div>
-                        <div class="lesson-meta">${lesson.subject} • ${formattedDate}</div>
-                    </div>
-                    <div class="lesson-actions">
-                        <button class="format-btn" onclick="loadLesson('${lesson.id}')" title="Charger">
-                            <i class="fas fa-upload"></i>
-                        </button>
-                        <button class="format-btn" onclick="deleteLesson('${lesson.id}')" title="Supprimer">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `;
-                
-                savedLessonsContainer.appendChild(lessonItem);
-            });
-        }
-        
-        // Fonction pour charger une leçon
-        function loadLesson(lessonId) {
-            const savedLessons = JSON.parse(localStorage.getItem('savedLessons')) || [];
-            const lesson = savedLessons.find(l => l.id === lessonId);
-            
-            if (!lesson) {
-                alert('Leçon non trouvée !');
-                return;
-            }
-            
-            // Remplir les champs du formulaire
-            document.getElementById('school-name').value = lesson.schoolName || '';
-            document.getElementById('subject').value = lesson.subject || '';
-            document.getElementById('discipline').value = lesson.discipline || '';
-            document.getElementById('lesson-theme').value = lesson.lessonTheme || '';
-            document.getElementById('class-name').value = lesson.className || '';
-            document.getElementById('boys-count').value = lesson.boysCount || 0;
-            document.getElementById('girls-count').value = lesson.girlsCount || 0;
-            document.getElementById('lesson-title').value = lesson.lessonTitle || '';
-            document.getElementById('lesson-duration').value = lesson.lessonDuration || '';
-            document.getElementById('lesson-date').value = lesson.lessonDate || '';
-            
-            // Effacer les sections existantes
-            document.getElementById('content-blocks').innerHTML = '';
-            
-            // Ajouter les sections de contenu
-            if (lesson.content && lesson.content.length > 0) {
-                lesson.content.forEach(section => {
-                    addSection(section.type);
-                    
-                    // Attendre que la section soit ajoutée avant de la remplir
-                    setTimeout(() => {
-                        const sections = document.querySelectorAll('.content-block');
-                        const lastSection = sections[sections.length - 1];
-                        
-                        if (section.type === 'image') {
-                            // Pour les images, nous ne pouvons pas restaurer le fichier, mais nous pouvons restaurer la légende
-                            const captionInput = lastSection.querySelector('input[type="text"]');
-                            if (captionInput) {
-                                captionInput.value = section.caption || '';
-                            }
-                        } else {
-                            const editor = lastSection.querySelector('.text-editor');
-                            if (editor) {
-                                editor.innerHTML = section.text || '';
-                            }
-                            
-                            // Restaurer la numérotation et l'alignement
-                            if (section.numbering) {
-                                setNumberingType(lastSection.id, section.numbering);
-                            }
-                            if (section.alignment) {
-                                setAlignment(lastSection.id, section.alignment);
-                            }
-                        }
-                        
-                        updatePreview();
-                    }, 100);
-                });
-            }
-            
-            updatePreview();
-            alert('Leçon chargée avec succès !');
-        }
-        
-        // Fonction pour supprimer une leçon
-        function deleteLesson(lessonId) {
-            if (confirm('Êtes-vous sûr de vouloir supprimer cette leçon ?')) {
-                let savedLessons = JSON.parse(localStorage.getItem('savedLessons')) || [];
-                savedLessons = savedLessons.filter(lesson => lesson.id !== lessonId);
-                localStorage.setItem('savedLessons', JSON.stringify(savedLessons));
-                loadSavedLessons();
-            }
-        }
-        
-        // Fonction pour exporter en JSON
-        function exportToJson() {
-            // Récupérer les données du formulaire
-            currentLesson.schoolName = document.getElementById('school-name').value;
-            currentLesson.subject = document.getElementById('subject').value;
-            currentLesson.discipline = document.getElementById('discipline').value;
-            currentLesson.lessonTheme = document.getElementById('lesson-theme').value;
-            currentLesson.className = document.getElementById('class-name').value;
-            currentLesson.boysCount = parseInt(document.getElementById('boys-count').value) || 0;
-            currentLesson.girlsCount = parseInt(document.getElementById('girls-count').value) || 0;
-            currentLesson.lessonTitle = document.getElementById('lesson-title').value;
-            currentLesson.lessonDuration = document.getElementById('lesson-duration').value;
-            currentLesson.lessonDate = document.getElementById('lesson-date').value;
-            
-            // Récupérer le contenu des sections
-            currentLesson.content = [];
-            const sections = document.querySelectorAll('.content-block');
-            
-            sections.forEach(section => {
-                const sectionType = section.dataset.type;
-                const numberingType = section.dataset.numbering || 'none';
-                const alignment = section.dataset.alignment || 'left';
-                
-                if (sectionType === 'image') {
-                    const imageInput = section.querySelector('input[type="file"]');
-                    const imagePreview = section.querySelector('.image-preview');
-                    const captionInput = section.querySelector('input[type="text"]');
-                    
-                    if (imagePreview && imagePreview.style.display !== 'none') {
-                        currentLesson.content.push({
-                            type: sectionType,
-                            imageSrc: imagePreview.src,
-                            caption: captionInput.value,
-                            alignment: alignment
-                        });
-                    }
-                } else {
-                    const editor = section.querySelector('.text-editor');
-                    if (editor) {
-                        currentLesson.content.push({
-                            type: sectionType,
-                            text: editor.innerHTML,
-                            numbering: numberingType,
-                            alignment: alignment
-                        });
-                    }
-                }
-            });
-            
-            // Créer un blob JSON
-            const dataStr = JSON.stringify(currentLesson, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            
-            // Créer un lien de téléchargement
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `leçon_${currentLesson.lessonTitle || 'sans_titre'}.json`;
-            link.click();
-        }
-        
-        // Fonction pour importer depuis JSON
-        function importFromJson() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            
-            input.onchange = e => {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                
-                reader.onload = event => {
-                    try {
-                        const lessonData = JSON.parse(event.target.result);
-                        
-                        // Remplir les champs du formulaire
-                        document.getElementById('school-name').value = lessonData.schoolName || '';
-                        document.getElementById('subject').value = lessonData.subject || '';
-                        document.getElementById('discipline').value = lessonData.discipline || '';
-                        document.getElementById('lesson-theme').value = lessonData.lessonTheme || '';
-                        document.getElementById('class-name').value = lessonData.className || '';
-                        document.getElementById('boys-count').value = lessonData.boysCount || 0;
-                        document.getElementById('girls-count').value = lessonData.girlsCount || 0;
-                        document.getElementById('lesson-title').value = lessonData.lessonTitle || '';
-                        document.getElementById('lesson-duration').value = lessonData.lessonDuration || '';
-                        document.getElementById('lesson-date').value = lessonData.lessonDate || '';
-                        
-                        // Effacer les sections existantes
-                        document.getElementById('content-blocks').innerHTML = '';
-                        
-                        // Ajouter les sections de contenu
-                        if (lessonData.content && lessonData.content.length > 0) {
-                            lessonData.content.forEach(section => {
-                                addSection(section.type);
-                                
-                                // Attendre que la section soit ajoutée avant de la remplir
-                                setTimeout(() => {
-                                    const sections = document.querySelectorAll('.content-block');
-                                    const lastSection = sections[sections.length - 1];
-                                    
-                                    if (section.type === 'image') {
-                                        // Pour les images, nous ne pouvons pas restaurer le fichier, mais nous pouvons restaurer la légende
-                                        const captionInput = lastSection.querySelector('input[type="text"]');
-                                        if (captionInput) {
-                                            captionInput.value = section.caption || '';
-                                        }
-                                    } else {
-                                        const editor = lastSection.querySelector('.text-editor');
-                                        if (editor) {
-                                            editor.innerHTML = section.text || '';
-                                        }
-                                        
-                                        // Restaurer la numérotation et l'alignement
-                                        if (section.numbering) {
-                                            setNumberingType(lastSection.id, section.numbering);
-                                        }
-                                        if (section.alignment) {
-                                            setAlignment(lastSection.id, section.alignment);
-                                        }
-                                    }
-                                    
-                                    updatePreview();
-                                }, 100);
-                            });
-                        }
-                        
-                        updatePreview();
-                        alert('Leçon importée avec succès !');
-                    } catch (error) {
-                        alert('Erreur lors de l\'importation du fichier JSON : ' + error.message);
-                    }
-                };
-                
-                reader.readAsText(file);
-            };
-            
-            input.click();
-        }
-        
-        // Fonction pour générer un PDF
-        function generatePDF() {
-            // Mettre à jour l'aperçu avant de générer le PDF
-            updatePreview();
-            
-            // Utiliser html2canvas pour capturer l'aperçu
-            html2canvas(document.getElementById('lesson-preview')).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const imgWidth = 210; // A4 width in mm
-                const pageHeight = 295; // A4 height in mm
-                const imgHeight = canvas.height * imgWidth / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 0;
-                
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-                
-                // Ajouter des pages supplémentaires si nécessaire
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
-                
-                // Télécharger le PDF
-                pdf.save(`leçon_${document.getElementById('lesson-title').value || 'sans_titre'}.pdf`);
-            });
-        }
-        
-        // Fonction pour générer le code LaTeX
-        function generateLatex() {
-            // Synchroniser le contenu avant de générer le LaTeX
-            synchronizeContent();
-            
-            const latexCode = generateLatexCode();
-            
-            // Créer un blob avec le code LaTeX
-            const blob = new Blob([latexCode], {type: 'text/plain'});
-            
-            // Créer un lien de téléchargement
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `leçon_${document.getElementById('lesson-title').value || 'sans_titre'}.tex`;
-            link.click();
-            
-            alert('Code LaTeX généré avec succès !');
-        }
-        
-        // Fonction pour afficher le code LaTeX
-        function showLatexCode() {
-            // Synchroniser le contenu avant de générer le LaTeX
-            synchronizeContent();
-            
-            const latexCode = generateLatexCode();
-            
-            // Créer l'overlay
-            const overlay = document.createElement('div');
-            overlay.className = 'latex-overlay';
-            overlay.innerHTML = `
-                <div class="latex-content">
-                    <div class="latex-header">
-                        <div class="latex-title">Code LaTeX généré</div>
-                        <div class="latex-actions">
-                            <button class="copy-btn" id="copy-latex-btn">
-                                <i class="fas fa-copy"></i> Copier
-                            </button>
-                            <button class="close-btn" onclick="this.parentElement.parentElement.parentElement.remove()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="latex-code" id="latex-code">${escapeHtml(latexCode)}</div>
-                    <p><small>Vous pouvez copier ce code et le coller dans votre éditeur LaTeX préféré.</small></p>
-                </div>
-            `;
-            
-            // Ajouter l'overlay au document
-            document.body.appendChild(overlay);
-            
-            // Ajouter l'événement de copie
-            document.getElementById('copy-latex-btn').addEventListener('click', function() {
-                copyLatexCode(latexCode);
-            });
-        }
-        
-        // Fonction pour échapper le HTML dans le code LaTeX affiché
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Fonction pour synchroniser le contenu avant de générer le LaTeX
-        function synchronizeContent() {
-            // Mettre à jour l'aperçu pour s'assurer que tout est à jour
-            updatePreview();
-            
-            // Sauvegarder automatiquement les modifications dans le stockage local
-            saveToLocalStorage();
-            
-            console.log('Contenu synchronisé pour la génération LaTeX');
-        }
-        
-        // Fonction pour copier le code LaTeX
-        function copyLatexCode(latexCode) {
-            const copyBtn = document.getElementById('copy-latex-btn');
-            
-            // Utiliser l'API Clipboard moderne
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(latexCode).then(() => {
-                    showCopySuccess(copyBtn);
-                }).catch(err => {
-                    console.error('Erreur lors de la copie: ', err);
-                    fallbackCopyText(latexCode, copyBtn);
-                });
-            } else {
-                // Fallback pour les navigateurs plus anciens
-                fallbackCopyText(latexCode, copyBtn);
-            }
-        }
-        
-        // Fallback pour la copie de texte
-        function fallbackCopyText(text, copyBtn) {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            textArea.style.top = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                showCopySuccess(copyBtn);
-            } catch (err) {
-                console.error('Fallback: Erreur lors de la copie: ', err);
-                alert('Erreur lors de la copie du code LaTeX. Veuillez copier manuellement le texte affiché.');
-            }
-            
-            document.body.removeChild(textArea);
-        }
-        
-        // Fonction pour afficher le succès de la copie
-        function showCopySuccess(copyBtn) {
-            const originalText = copyBtn.innerHTML;
-            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copié !';
-            copyBtn.classList.add('copied');
-            
-            setTimeout(() => {
-                copyBtn.innerHTML = originalText;
-                copyBtn.classList.remove('copied');
-            }, 2000);
-        }
-        
-        // Fonction pour générer le code LaTeX
-        function generateLatexCode() {
-            // Récupérer les données du formulaire
-            const schoolName = document.getElementById('school-name').value || 'Nom de l\'établissement';
-            const teacherName = document.getElementById('teacher-name-display').textContent;
-            const subject = document.getElementById('subject').value || 'Matière';
-            const discipline = document.getElementById('discipline').value || 'Discipline';
-            const lessonTheme = document.getElementById('lesson-theme').value || 'Thème de la leçon';
-            const className = document.getElementById('class-name').value || 'Classe';
-            const boysCount = parseInt(document.getElementById('boys-count').value) || 0;
-            const girlsCount = parseInt(document.getElementById('girls-count').value) || 0;
-            const totalStudents = boysCount + girlsCount;
-            const lessonTitle = document.getElementById('lesson-title').value || 'Titre de la leçon';
-            const lessonDuration = document.getElementById('lesson-duration').value || 'Durée';
-            const lessonDate = formatDate(document.getElementById('lesson-date').value) || 'Date';
-            
-            // Construire le code LaTeX
-            let latexCode = `\\documentclass[12pt]{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage[T1]{fontenc}
-\\usepackage[french]{babel}
-\\usepackage{geometry}
-\\geometry{a4paper, margin=2.5cm}
-\\usepackage{graphicx}
-\\usepackage{amsmath, amssymb}
-\\usepackage{enumitem}
-\\usepackage{titlesec}
-\\usepackage{fancyhdr}
-\\usepackage{color}
+  </div>
 
-\\titleformat{\\section}{\\Large\\bfseries}{}{0pt}{}
-\\titleformat{\\subsection}{\\large\\bfseries}{}{0pt}{}
+  <!-- ===== PREVIEW ===== -->
+  <div class="main-content">
+    <div class="page-container" id="pageContainer">
+      <div class="page" id="emptyState">
+        <div class="empty-state"><div class="icon">📄</div><h3>Prêt à générer votre fiche</h3><p style="color:var(--gray-400);font-size:.78rem">Remplissez les 10 sections du panneau, puis cliquez sur <strong>"Générer la fiche complète"</strong>.</p></div>
+      </div>
 
-\\pagestyle{fancy}
-\\fancyhf{}
-\\fancyhead[L]{${escapeLaTeX(schoolName)}}
-\\fancyhead[R]{${escapeLaTeX(teacherName)}}
-\\fancyfoot[C]{\\thepage}
+      <div class="page" id="fichePage" style="display:none">
+        <div class="page-header"><span id="g_hdrL">École – Classe</span><span id="g_hdrR">Fiche Pédagogique</span></div>
 
+        <!-- ===== PAGE DE GARDE ===== -->
+        <div class="title-page">
+          <h1>FICHE PÉDAGOGIQUE DE LEÇON</h1>
+          <div class="subtitle" id="g_theme">Thème</div>
+          <div class="theme" id="g_titre">Titre</div><br>
+          <div class="info-line" id="g_ens">Enseignant</div>
+          <div class="info-line" id="g_etab">Établissement</div>
+          <div class="info-line" id="g_dates">Date</div>
+          <div class="info-line" id="g_duree">Durée</div>
+          <hr class="divider">
+          <div id="g_img1"></div>
+          <div class="context-box" id="g_ctx">Contexte</div>
+          <div id="g_img2"></div>
+          <div id="g_seanceTbl"></div>
+          <div id="g_img3"></div>
+        </div>
+
+        <!-- ===== INFORMATIONS GÉNÉRALES ===== -->
+        <div class="section">
+          <div class="section-title">Informations générales</div>
+          <div class="tbox tbox-info">
+            <table class="tbl">
+              <tr><th style="width:130px">COMPÉTENCE</th><td id="g_comp">—</td></tr>
+              <tr><th>RÉFÉRENCES</th><td id="g_ref">—</td></tr>
+              <tr><th>DOMAINE</th><td id="g_dom">—</td></tr>
+              <tr><th>SÉQUENCE</th><td id="g_seq">—</td></tr>
+            </table>
+          </div>
+          <div class="grid-2">
+            <div><div class="sub-title"><span class="bc bc-info">🎯</span> Objectifs spécifiques</div><ul class="bsq" id="g_obj"></ul></div>
+            <div><div class="sub-title"><span class="bc bc-info">📋</span> Prérequis</div><ul class="bsq" id="g_pre"></ul></div>
+          </div>
+          <div class="grid-2">
+            <div><div class="sub-title">📦 Matériel concret</div><ul id="g_matC"></ul></div>
+            <div><div class="sub-title">📦 Supports pédagogiques</div><ul id="g_matP"></ul></div>
+          </div>
+          <div class="sub-title"><span class="bc bc-info">🔧</span> Stratégies pédagogiques</div>
+          <ul class="btri" id="g_strat"></ul>
+          <div class="tbox tbox-imp"><div class="tbox-title"><span class="bc bc-imp">⚠️</span> Adaptations pédagogiques</div><ul id="g_adapt"></ul></div>
+        </div>
+
+        <!-- ===== DÉROULEMENT ===== -->
+        <div class="section">
+          <div class="section-title">Déroulement des activités</div>
+          <div id="g_seancesDet"></div>
+          <div id="g_deroulement"></div>
+        </div>
+
+        <!-- ===== TRACE ÉCRITE ===== -->
+        <div class="section">
+          <div class="section-title">Trace écrite complète</div>
+          <div class="tbox tbox-trace">
+            <div class="tbox-title"><span class="bc bc-trace">📖</span> Leçon : <span id="g_leconTitre">Les Fractions</span></div>
+            <div class="tbox tbox-def" id="b_def"><div class="tbox-title"><span class="bc bc-def">📌</span> Définition</div><div id="g_def"></div><div id="g_defImg"></div></div>
+            <div class="tbox tbox-prop" id="b_prop"><div class="tbox-title"><span class="bc bc-prop">⚡</span> Théorème &amp; Propriété</div><div id="g_prop"></div><div id="g_propImg"></div></div>
+            <div class="tbox tbox-imp" id="b_rem"><div class="tbox-title"><span class="bc bc-imp">💡</span> Remarque</div><div id="g_rem"></div><div id="g_remarqueImg"></div></div>
+            <div class="tbox tbox-ex" id="b_ex"><div class="tbox-title"><span class="bc bc-ex">✏️</span> Exemple</div><div id="g_ex"></div><div id="g_exempleImg"></div></div>
+            <div class="tbox tbox-act" id="b_act"><div class="tbox-title"><span class="bc bc-act">🔬</span> Activité</div><div id="g_act"></div><div id="g_activiteImg"></div></div>
+            <div class="tbox tbox-eval" id="b_solAct"><div class="tbox-title"><span class="bc bc-eval">✅</span> Solution de l'activité</div><div id="g_solAct"></div><div id="g_solActiviteImg"></div></div>
+            <div class="tbox tbox-act" id="b_exoApp"><div class="tbox-title"><span class="bc bc-act">📝</span> Exercice d'application</div><div id="g_exoApp"></div><div id="g_exoAppImg"></div></div>
+            <div class="tbox tbox-eval" id="b_solExo"><div class="tbox-title"><span class="bc bc-eval">✅</span> Solution des exercices</div><div id="g_solExo"></div><div id="g_solExoImg"></div></div>
+            <div class="tbox tbox-trace" id="b_maison"><div class="tbox-title"><span class="bc bc-trace">🏠</span> Exercice de maison</div><div id="g_maison"></div><div id="g_exoMaisonImg"></div><table class="sig-tbl"><tr><th>Signature parent</th><th>Date</th></tr><tr><td style="height:18px"></td><td></td></tr></table></div>
+            <div class="tbox tbox-eval" id="b_solMaison"><div class="tbox-title"><span class="bc bc-eval">✅</span> Solution du devoir</div><div id="g_solMaison"></div><div id="g_solMaisonImg"></div></div>
+            <div class="qbox">« Les mathématiques nous aident à mieux partager et mesurer notre monde quotidien. »</div>
+          </div>
+        </div>
+
+        <!-- ===== CAPACITÉS ===== -->
+        <div class="section">
+          <div class="section-title">Capacités visées</div>
+          <div class="grid-2"><ul class="btri" id="g_cap1"></ul><ul class="btri" id="g_cap2"></ul></div>
+        </div>
+
+        <!-- ===== CONTEXTE AFRICAIN ===== -->
+        <div class="section">
+          <div class="section-title">Contexte africain et liens transversaux</div>
+          <div class="tbox tbox-info">
+            <div class="grid-2">
+              <div><div class="sub-title">Domaines d'application</div><ul id="g_domaines"></ul></div>
+              <div><div class="sub-title">Liens transdisciplinaires</div><ul id="g_liens"></ul></div>
+            </div>
+            <div class="sub-title">Exemples concrets</div><ul id="g_exemples"></ul>
+          </div>
+        </div>
+
+        <!-- ===== ÉVALUATION ===== -->
+        <div class="section">
+          <div class="section-title">Modalités d'évaluation</div>
+          <div class="tbox tbox-eval">
+            <table class="tbl">
+              <tr><th style="width:110px">Formative</th><td id="g_evalF">—</td></tr>
+              <tr><th>Sommative</th><td id="g_evalS">—</td></tr>
+              <tr><th>Critères</th><td id="g_evalC">—</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== ANNEXES ===== -->
+        <div class="section">
+          <div class="section-title">Annexes pédagogiques</div>
+          <div class="grid-2">
+            <div><div class="sub-title">Différenciation</div><p><b>En difficulté :</b></p><ul id="g_diffD"></ul><p><b>Avancés :</b></p><ul id="g_diffA"></ul></div>
+            <div><div class="sub-title">Ressources</div><ul id="g_ress"></ul><div class="sub-title">Remarques</div><ul id="g_remF"></ul></div>
+          </div>
+        </div>
+
+        <!-- ===== FIN ===== -->
+        <div class="section" style="border-bottom:none">
+          <div class="fe"><hr><div class="t">— Fiche pédagogique terminée —</div><hr style="width:100%;margin-top:3px"><div class="s" id="g_pied">Document généré</div></div>
+        </div>
+
+        <div class="page-footer"><span id="g_ftrL">Enseignant</span><span id="g_ftrC">1 / 1</span><span id="g_ftrR">Date</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);}
+const $=id=>document.getElementById(id);
+const v=id=>{const e=$(id);return e?e.value:'';};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const escA=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const nl2br=s=>esc(s).replace(/\n/g,'<br>');
+const imgData={};
+function loadImg(id){const i=$(id);const f=i.files[0];if(!f){imgData[id]='';return;}imgData[id+'_name']=f.name;const r=new FileReader();r.onload=e=>{imgData[id]=e.target.result;};r.readAsDataURL(f);}
+
+let sc=3;const PX=['s1','s2','s3','s4','s5','s6','s7','s8'];
+function gsv(p,f){const e=$('f_'+p+'_'+f);return e?e.value:'';}
+function rS(){
+  let h='';
+  for(let i=0;i<sc;i++){const p=PX[i]||'s'+(i+1);
+    h+=`<div class="sc"><button class="del" onclick="supS(${i})"${i<1?' style="display:none"':''}>✕</button>
+    <div class="num">◆ Séance ${i+1}</div>
+    <div class="r"><input type="text" id="f_${p}_titre" placeholder="Titre" value="${escA(gsv(p,'titre'))}"><input type="text" id="f_${p}_duree" placeholder="Durée" value="${escA(gsv(p,'duree'))}" style="width:60px"></div>
+    <div class="r"><input type="text" id="f_${p}_obj" placeholder="Objectif" value="${escA(gsv(p,'obj'))}"><input type="text" id="f_${p}_mat" placeholder="Matériel" value="${escA(gsv(p,'mat'))}"></div></div>`;}
+  $('seancesContainer').innerHTML=h;
+}
+function ajouterSeance(){if(sc>=8){toast('Max 8 séances');return;}sc++;rS();toast('Séance ajoutée');}
+function supS(idx){
+  if(sc<=1)return;const b=[];
+  for(let i=0;i<sc;i++){const p=PX[i]||'s'+(i+1);b.push({t:gsv(p,'titre'),d:gsv(p,'duree'),o:gsv(p,'obj'),m:gsv(p,'mat')});}
+  b.splice(idx,1);sc--;rS();
+  for(let i=0;i<sc&&i<b.length;i++){const p=PX[i]||'s'+(i+1);
+    if($('f_'+p+'_titre'))$('f_'+p+'_titre').value=b[i].t;
+    if($('f_'+p+'_duree'))$('f_'+p+'_duree').value=b[i].d;
+    if($('f_'+p+'_obj'))$('f_'+p+'_obj').value=b[i].o;
+    if($('f_'+p+'_mat'))$('f_'+p+'_mat').value=b[i].m;}
+}
+function apercuImage(){const u=imgData['f_image']||v('f_image'),img=$('imgPreview');if(u){img.src=u;img.classList.add('show');img.onerror=()=>img.classList.remove('show');}else img.classList.remove('show');}
+function imgHTML(){const u=imgData['f_image']||v('f_image');if(!u)return '';const c=v('f_imageLegende');return `<div class="img-wrap"><img src="${escA(u)}" alt="${escA(c||'')}">${c?'<div class="cap">'+esc(c)+'</div>':''}</div>`;}
+function lst(id,ulId,cls){const items=v(id).split('\n').filter(s=>s.trim());let h='';items.forEach(i=>{h+=`<li>${esc(i.trim())}</li>`;});$(ulId).innerHTML=h;if(cls)$(ulId).className=cls;}
+function txt(id,elId,boxId){const val=v(id);$(elId).innerHTML=nl2br(val||'');if(boxId){const b=$(boxId);if(b)b.style.display=(val&&val.trim())?'block':'none';}}
+function imgTE(pref,elId){const u=imgData[pref+'Img']||v(pref+'Img');if(!u){$(elId).innerHTML='';return;}const c=v(pref+'ImgLeg');$(elId).innerHTML=`<div class="img-wrap"><img src="${escA(u)}" alt="${escA(c||'')}">${c?'<div class="cap">'+esc(c)+'</div>':''}</div>`;}
+
+function generer(){
+  $('g_hdrL').textContent=v('f_ecole')+' – '+v('f_classe');
+  $('g_hdrR').textContent='Fiche Pédagogique – '+v('f_matiere');
+  $('g_ftrL').textContent=v('f_enseignant');
+  $('g_ftrR').textContent=v('f_date');
+  $('g_theme').textContent=v('f_theme');
+  $('g_titre').textContent=v('f_titre');
+  $('g_ens').textContent='Enseignant : '+v('f_enseignant');
+  $('g_etab').textContent=v('f_ecole')+' – '+v('f_classe')+' – Effectif : '+v('f_effectif');
+  $('g_dates').textContent='Date : '+v('f_date');
+  $('g_duree').textContent='Durée : '+v('f_duree');
+  $('g_ctx').textContent=v('f_contexte');
+  $('g_pied').textContent='Document généré le '+v('f_date')+' — '+v('f_ecole');
+  $('g_comp').textContent=v('f_competence');
+  $('g_ref').textContent=v('f_references');
+  $('g_dom').textContent=v('f_domaine');
+  $('g_seq').textContent=v('f_sequence');
+  $('g_leconTitre').textContent=v('f_titre');
+
+  const ih=imgHTML(),pos=v('f_imagePos');
+  $('g_img1').innerHTML=$('g_img2').innerHTML=$('g_img3').innerHTML='';
+  if(ih){if(pos==='after-title')$('g_img1').innerHTML=ih;else if(pos==='after-context')$('g_img2').innerHTML=ih;else $('g_img3').innerHTML=ih;}
+
+  let t='<table class="seance-table"><tr><th>Séance</th><th>Durée</th><th>Objectif</th><th>Matériel</th></tr>';
+  for(let i=0;i<sc;i++){const p=PX[i]||'s'+(i+1);t+=`<tr><td>${i+1}</td><td>${esc(gsv(p,'duree'))}</td><td>${esc(gsv(p,'obj'))}</td><td>${esc(gsv(p,'mat'))}</td></tr>`;}
+  t+='</table>';$('g_seanceTbl').innerHTML=t;
+
+  let d='';
+  for(let i=0;i<sc;i++){const p=PX[i]||'s'+(i+1);const tt=gsv(p,'titre')||'Séance '+(i+1);d+=`<div class="tbox tbox-act"><div class="tbox-title"><span class="bc bc-act">📘</span> Séance ${i+1} : ${esc(tt)}</div><table class="tbl"><tr><th style="width:85px">Étape 1</th><td>Situation déclenchante (10 min)</td></tr><tr><th>Étape 2</th><td>Manipulation / Recherche (15 min)</td></tr><tr><th>Étape 3</th><td>Mise en commun et synthèse (10 min)</td></tr></table></div>`;}
+  $('g_seancesDet').innerHTML=d;
+
+  const der=v('f_deroulement');let dh='';const dl=der.split('\n').filter(s=>s.trim());if(dl.length){dh='<ol style="margin-top:6px">';dl.forEach(s=>{dh+=`<li style="margin-bottom:3px">${esc(s)}</li>`;});dh+='</ol>';}$('g_deroulement').innerHTML=dh;
+
+  lst('f_objectifs','g_obj','bsq');
+  lst('f_prerequis','g_pre','bsq');
+  lst('f_matConcret','g_matC','');
+  lst('f_matSupports','g_matP','');
+  lst('f_strategies','g_strat','btri');
+  lst('f_adaptations','g_adapt','');
+
+  txt('f_def','g_def','b_def');imgTE('f_def','g_defImg');
+  txt('f_prop','g_prop','b_prop');imgTE('f_prop','g_propImg');
+  txt('f_remarque','g_rem','b_rem');imgTE('f_remarque','g_remarqueImg');
+  txt('f_exemple','g_ex','b_ex');imgTE('f_exemple','g_exempleImg');
+  txt('f_activite','g_act','b_act');imgTE('f_activite','g_activiteImg');
+  txt('f_solActivite','g_solAct','b_solAct');imgTE('f_solActivite','g_solActiviteImg');
+  txt('f_exoApp','g_exoApp','b_exoApp');imgTE('f_exoApp','g_exoAppImg');
+  txt('f_solExo','g_solExo','b_solExo');imgTE('f_solExo','g_solExoImg');
+  txt('f_exoMaison','g_maison','b_maison');imgTE('f_exoMaison','g_exoMaisonImg');
+  txt('f_solMaison','g_solMaison','b_solMaison');imgTE('f_solMaison','g_solMaisonImg');
+
+  lst('f_cap1','g_cap1','btri');
+  lst('f_cap2','g_cap2','btri');
+
+  $('g_evalF').innerHTML=nl2br(v('f_evalForm'));
+  $('g_evalS').innerHTML=nl2br(v('f_evalSom'));
+  $('g_evalC').innerHTML=nl2br(v('f_evalCrit'));
+
+  lst('f_domaines','g_domaines','');
+  lst('f_liens','g_liens','');
+  lst('f_exemples','g_exemples','');
+
+  lst('f_diffDif','g_diffD','');
+  lst('f_diffAv','g_diffA','');
+  lst('f_ressources','g_ress','');
+  lst('f_remarquesFin','g_remF','');
+
+  $('emptyState').style.display='none';
+  $('fichePage').style.display='block';
+  toast('✅ Fiche complète générée');
+}
+
+function exporterHTML(){
+  if($('fichePage').style.display==='none'){toast("Générez d'abord");return;}
+  const s=document.querySelector('style').outerHTML;
+  const b=new Blob([`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Fiche Pédagogique</title>${s}</head><body style="background:white;padding:0"><div style="max-width:1140px;margin:0 auto">${$('fichePage').outerHTML}</div></body></html>`],{type:'text/html'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='fiche_pedagogique.html';a.click();URL.revokeObjectURL(a.href);
+  toast('💾 Exporté HTML');
+}
+
+function exporterLatex(){
+  if($('fichePage').style.display==='none'){toast("Générez d'abord");return;}
+  const el=s=>String(s).replace(/&/g,'\\&').replace(/%/g,'\\%').replace(/\$/g,'\\$').replace(/#/g,'\\#').replace(/_/g,'\\_').replace(/\{/g,'\\{').replace(/\}/g,'\\}').replace(/~/g,'\\textasciitilde{}');
+  const ecl=s=>el(s).replace(/\n/g,'\n  ');
+  let sRows='';
+  for(let i=0;i<sc;i++){const p=PX[i]||'s'+(i+1);sRows+=`    ${i+1} & ${el(gsv(p,'duree'))} & ${el(gsv(p,'obj'))} & ${el(gsv(p,'mat'))} \\\\\\hline\n`;}
+  const flds=['def','prop','remarque','exemple','activite','solActivite','exoApp','solExo','exoMaison','solMaison'];
+  const tb={};flds.forEach(k=>{tb[k]=ecl(v('f_'+k));const ui=imgData['f_'+k+'Img_name']||v('f_'+k+'Img');tb[k+'ImgLatex']=ui?'\\par{\\centering\\includegraphics[width=0.5\\textwidth]{'+el(ui)+'}\\par\\small\\textit{'+el(v('f_'+k+'ImgLeg')||'')+'}\\par}':'';});
+  const ltx=`% === FICHE PÉDAGOGIQUE GÉNÉRÉE LE ${el(v('f_date'))} ===
+\\documentclass[10pt,a4paper]{article}
+\\usepackage[T1]{fontenc}\\usepackage[french]{babel}\\usepackage{amsmath,amssymb}
+\\usepackage{geometry}\\usepackage{fancyhdr}\\usepackage{array}\\usepackage{enumitem}
+\\usepackage[skins,breakable]{tcolorbox}\\usepackage{multicol}\\usepackage{tabularx}
+\\usepackage{xcolor}\\usepackage{booktabs}\\usepackage{hyperref}\\usepackage{lmodern}
+\\usepackage{graphicx}\\usepackage{lastpage}\\usepackage{float}
+\\definecolor{headerblue}{RGB}{10,36,99}\\definecolor{lightblue}{RGB}{238,242,255}
+\\definecolor{mediumblue}{RGB}{59,130,246}\\definecolor{darkblue}{RGB}{15,23,42}
+\\definecolor{accentorange}{RGB}{249,115,22}\\definecolor{accentgreen}{RGB}{16,185,129}
+\\definecolor{accentyellow}{RGB}{245,158,11}\\definecolor{accentred}{RGB}{239,68,68}
+\\geometry{top=1.5cm,bottom=1.2cm,left=1cm,right=1cm,headheight=15pt}
+\\newtcolorbox{headerbox}[1][]{enhanced,colback=lightblue,colframe=mediumblue,arc=4pt,boxsep=10pt,left=8pt,right=8pt,top=8pt,bottom=8pt,fontupper=\\normalfont,before skip=12pt,after skip=12pt,breakable,#1}
+\\newtcolorbox{activitybox}[1][]{enhanced,colback=accentorange!5!white,colframe=accentorange,arc=3pt,boxsep=8pt,left=6pt,right=6pt,top=8pt,bottom=8pt,title=Activité,fonttitle=\\bfseries\\color{darkblue},drop fuzzy shadow=accentorange!50!black,breakable,#1}
+\\newtcolorbox{evaluationbox}[1][]{enhanced,colback=accentgreen!5!white,colframe=accentgreen,arc=3pt,boxsep=8pt,left=6pt,right=6pt,top=8pt,bottom=8pt,title=Évaluation,fonttitle=\\bfseries\\color{darkblue},drop fuzzy shadow=accentgreen!50!black,breakable,#1}
+\\newtcolorbox{tracebox}[1][]{enhanced,colback=accentyellow!5!white,colframe=accentyellow,arc=3pt,boxsep=8pt,left=6pt,right=6pt,top=8pt,bottom=8pt,title=Trace Écrite,fonttitle=\\bfseries\\color{darkblue},drop fuzzy shadow=accentyellow!50!black,breakable,#1}
+\\newtcolorbox{definitionbox}[1][]{enhanced,colback=lightblue!80,colframe=mediumblue,arc=2pt,boxsep=6pt,left=6pt,right=6pt,top=6pt,bottom=6pt,fontupper=\\small,before skip=6pt,after skip=6pt,breakable,#1}
+\\newtcolorbox{importantbox}{enhanced,colback=accentred!5!white,colframe=accentred,arc=3pt,boxsep=8pt,left=6pt,right=6pt,top=8pt,bottom=8pt,title=\\textbf{Important},fonttitle=\\bfseries\\color{darkblue},drop fuzzy shadow=accentred!50!black,breakable}
+\\newcommand{\\sectiontitle}[1]{\\section*{\\textcolor{headerblue}{\\Large\\underline{\\textbf{#1}}}}\\vspace{-0.3cm}}
+\\newcommand{\\subsectiontitle}[1]{\\subsection*{\\textcolor{mediumblue}{\\textbf{#1}}}}
+\\pagestyle{fancy}\\fancyhf{}
+\\fancyhead[L]{\\textcolor{headerblue}{\\small ${el(v('f_ecole'))} -- ${el(v('f_classe'))}}}
+\\fancyhead[R]{\\textcolor{headerblue}{\\small Fiche Pédagogique -- ${el(v('f_matiere'))}}}
+\\fancyfoot[L]{\\textcolor{headerblue}{\\small ${el(v('f_enseignant'))}}}
+\\fancyfoot[C]{\\textcolor{headerblue}{\\thepage/\\pageref{LastPage}}}
+\\fancyfoot[R]{\\textcolor{headerblue}{\\small ${el(v('f_date'))}}}
+\\renewcommand{\\headrulewidth}{0.4pt}\\renewcommand{\\footrulewidth}{0.4pt}
 \\begin{document}
-
-\\begin{center}
-    \\LARGE\\textbf{${escapeLaTeX(lessonTitle)}}
-\\end{center}
-
+\\title{\\vspace*{2cm}\\begin{minipage}{\\textwidth}\\centering\\textbf{\\Huge FICHE PÉDAGOGIQUE DE LEÇON} \\\\\\[0.4cm]\\color{headerblue}\\LARGE\\textbf{${el(v('f_theme'))}} \\\\\\[0.3cm]\\color{darkblue}\\Large\\textbf{${el(v('f_titre'))}} \\\\\\[0.5cm]\\begin{tabular}{@{}c@{}}\\normalsize\\color{gray}${el(v('f_enseignant'))} \\\\ ${el(v('f_ecole'))} -- ${el(v('f_classe'))} -- ${el(v('f_effectif'))} \\\\ Date : ${el(v('f_date'))} \\\\ Durée : ${el(v('f_duree'))}\\end{tabular}\\end{minipage}}\\author{}\\date{}\\maketitle
+\\begin{center}\\rule{\\textwidth}{2pt}\\end{center}
 \\vspace{0.5cm}
+\\begin{definitionbox}\\centering\\textbf{\\large Contexte :} ${ecl(v('f_contexte'))}\\end{definitionbox}
+\\vspace{0.3cm}
+\\begin{center}\\begin{tabular}{|c|c|c|c|}\\hline\\rowcolor{lightblue}\\textbf{Séance} & \\textbf{Durée} & \\textbf{Objectif} & \\textbf{Matériel} \\\\\\hline ${sRows}\\end{tabular}\\end{center}
+\\vspace{0.3cm}
+\\subsectiontitle{DÉROULEMENT DES ACTIVITÉS}
+\\begin{enumerate}[leftmargin=*,label=\\arabic*.,itemsep=3pt]
+${v('f_deroulement').split('\n').filter(s=>s.trim()).map(s=>'  \\item '+el(s.trim())).join('\n')}
+\\end{enumerate}
+\\newpage
+\\sectiontitle{INFORMATIONS GÉNÉRALES}
+\\begin{headerbox}\\begin{tabularx}{\\textwidth}{@{}>{\\bfseries\\color{darkblue}}lX@{}}COMPÉTENCE : & ${ecl(v('f_competence'))} \\\\ RÉFÉRENCES : & ${el(v('f_references'))} \\\\ DOMAINE : & ${el(v('f_domaine'))} \\\\ SÉQUENCE : & ${el(v('f_sequence'))} \\\\ \\end{tabularx}\\end{headerbox}
+\\vspace{0.3cm}
+\\begin{minipage}[t]{0.48\\textwidth}\\subsectiontitle{OBJECTIFS}\\begin{itemize}[leftmargin=*,label=\\textcolor{headerblue}{\\tiny$\\blacksquare$},itemsep=2pt]${v('f_objectifs').split('\n').filter(s=>s.trim()).map(s=>'\\n    \\\\item '+el(s.trim())).join('')}\\end{itemize}\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.48\\textwidth}\\subsectiontitle{PRÉREQUIS}\\begin{itemize}[leftmargin=*,label=\\textcolor{headerblue}{\\tiny$\\blacksquare$},itemsep=2pt]${v('f_prerequis').split('\n').filter(s=>s.trim()).map(s=>'\\n    \\\\item '+el(s.trim())).join('')}\\end{itemize}\\end{minipage}
+\\vspace{0.3cm}\\subsectiontitle{STRATÉGIES}\\begin{itemize}[leftmargin=*,label=\\textcolor{headerblue}{$\\triangleright$}]${v('f_strategies').split('\n').filter(s=>s.trim()).map(s=>'\\n  \\\\item '+el(s.trim())).join('')}\\end{itemize}
+\\begin{importantbox}\\textbf{Adaptations :} ${v('f_adaptations').split('\n').filter(s=>s.trim()).map(s=>'\\\\begin{itemize}\\\\item '+el(s.trim())+'\\\\end{itemize}').join('')}\\end{importantbox}
+\\newpage
+\\sectiontitle{TRACE ÉCRITE COMPLÈTE}
+\\begin{tracebox}\\centering\\textbf{\\Large LEÇON : ${el(v('f_titre'))}}
+\\begin{definitionbox}${tb.def}${tb.defImgLatex}\\end{definitionbox}
+\\begin{importantbox}\\textbf{Propriété} \\\\ ${tb.prop}${tb.propImgLatex}\\end{importantbox}
+\\begin{importantbox}\\textbf{Remarque} \\\\ ${tb.remarque}${tb.remarqueImgLatex}\\end{importantbox}
+\\begin{activitybox}\\textbf{Exemple} \\\\ ${tb.exemple}${tb.exempleImgLatex}\\end{activitybox}
+\\begin{activitybox}\\textbf{Activité} \\\\ ${tb.activite}${tb.activiteImgLatex}\\end{activitybox}
+\\begin{evaluationbox}\\textbf{Solution} \\\\ ${tb.solActivite}${tb.solActiviteImgLatex}\\end{evaluationbox}
+\\begin{activitybox}\\textbf{Exercice d'application} \\\\ ${tb.exoApp}${tb.exoAppImgLatex}\\end{activitybox}
+\\begin{evaluationbox}\\textbf{Solution} \\\\ ${tb.solExo}${tb.solExoImgLatex}\\end{evaluationbox}
+\\begin{tracebox}\\textbf{Exercice de maison} \\\\ ${tb.exoMaison}${tb.exoMaisonImgLatex}
+\\begin{center}\\begin{tabular}{|c|c|}\\hline\\rowcolor{lightblue}\\textbf{Signature} & \\textbf{Date} \\\\\\hline & \\\\\\hline\\end{tabular}\\end{center}\\end{tracebox}
+\\begin{evaluationbox}\\textbf{Solution du devoir} \\\\ ${tb.solMaison}${tb.solMaisonImgLatex}\\end{evaluationbox}
+\\end{tracebox}
+\\vspace{0.5cm}\\begin{center}\\textbf{\\textcolor{headerblue}{FICHE PÉDAGOGIQUE TERMINÉE}} \\\\ \\rule{\\textwidth}{2pt} \\\\ \\small ${el(v('f_date'))} -- ${el(v('f_ecole'))}\\end{center}
+\\end{document}`;
+  const b=new Blob([ltx],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='fiche_pedagogique.tex';a.click();URL.revokeObjectURL(a.href);
+  toast('📄 LaTeX exporté');
+}
 
-\\begin{tabular}{p{0.45\\textwidth}p{0.45\\textwidth}}
-    \\textbf{Matière:} ${escapeLaTeX(subject)} & \\textbf{Classe:} ${escapeLaTeX(className)} \\\\
-    \\textbf{Discipline:} ${escapeLaTeX(discipline)} & \\textbf{Effectif:} ${totalStudents} élèves (${boysCount} garçons, ${girlsCount} filles) \\\\
-    \\textbf{Thème:} ${escapeLaTeX(lessonTheme)} & \\textbf{Durée:} ${escapeLaTeX(lessonDuration)} \\\\
-    & \\textbf{Date:} ${escapeLaTeX(lessonDate)}
-\\end{tabular}
+function resetTout(){
+  const defs={
+    f_ecole:'CEG MASSEDENA',f_classe:'Classe de 6ème',f_effectif:'38 élèves',f_matiere:'Mathématiques',
+    f_enseignant:'KOLA Maniwah Essohouna',f_date:'02/02/2026',f_duree:'3 séances de 60 min',
+    f_competence:'Résoudre des problèmes faisant appel au calcul numérique dans des situations concrètes de la vie quotidienne africaine, en mobilisant la notion de fraction comme outil de modélisation et de résolution.',
+    f_references:'Programme officiel de mathématiques 6ème, Socle commun',f_sequence:'Séquence 3 — Deuxième trimestre',
+    f_domaine:'Nombres et calculs',f_theme:'Nombres et Calculs',
+    f_titre:'Les Fractions : Notion, Comparaison et Opérations de Base',
+    f_contexte:'Cette séquence vise à construire progressivement la notion de fraction chez les élèves de 6ème à travers des situations concrètes du quotidien africain.',
+    f_objectifs:'Reconnaître et identifier des fractions dans des contextes variés\nReprésenter graphiquement des fractions à l\'aide de supports variés\nComparer et ranger des fractions en utilisant des stratégies adaptées\nEffectuer des opérations élémentaires sur les fractions\nUtiliser les fractions pour résoudre des problèmes de partage',
+    f_prerequis:'Connaissance des nombres entiers naturels jusqu\'à 1000\nMaîtrise des opérations de base (+, −, ×, ÷)\nNotion intuitive de partage équitable\nLecture et écriture correcte des nombres',
+    f_matConcret:'Fruits (oranges, bananes, mangues)\nBandes de papier de différentes longueurs\nDisques en carton fractionnés\nBilles, cailloux, graines',
+    f_matSupports:'Fiches d\'exercices différenciées (3 niveaux)\nPlanches illustrées sur le partage\nTableau magnétique avec fractions aimantées\nCalculatrices simples',
+    f_strategies:'Approche inductive : partir de situations concrètes pour dégager les concepts\nDifférenciation : adapter les activités selon les profils d\'apprentissage\nManipulation : utiliser systématiquement du matériel concret avant l\'abstraction\nTravail collaboratif : alterner phases individuelles, en binômes et en groupes\nMétacognition : faire verbaliser les démarches et les stratégies\nContextualisation : ancrer les apprentissages dans la réalité africaine',
+    f_adaptations:'Pour les élèves en difficulté : réduire la quantité d\'exercices, accentuer la manipulation\nPour les élèves avancés : problèmes complexes, recherche documentaire\nPour les élèves à besoins éducatifs particuliers : supports adaptés, temps supplémentaire',
+    f_image:'',f_imagePos:'after-title',f_imageLegende:'',
+    f_def:'Une fraction est un nombre qui représente une ou plusieurs parties d\'une unité divisée en parts égales.',
+    f_prop:'Propriété 1 : Un même nombre fractionnaire peut s\'écrire de différentes façons (fractions équivalentes).\nPropriété 2 : Si on multiplie ou divise le numérateur et le dénominateur par un même nombre non nul, on obtient une fraction égale.',
+    f_remarque:'Remarque : Une fraction peut représenter un nombre entier lorsque le numérateur est un multiple du dénominateur. Une fraction dont le numérateur est inférieur au dénominateur est appelée fraction propre.',
+    f_exemple:'Exemple 1 : Dans un gâteau partagé en 8 parts égales, si on prend 3 parts, on a 3/8 du gâteau.\nExemple 2 : 2/3 de 15 = (2 × 15) ÷ 3 = 30 ÷ 3 = 10.',
+    f_activite:'Activité : À l\'aide de bandes de papier, représenter les fractions 1/2, 1/4, 3/4 et 2/3. Comparer les longueurs obtenues et classer ces fractions par ordre croissant.',
+    f_solActivite:'Solution : 1/4 = 0,25 ; 1/2 = 0,5 ; 2/3 ≈ 0,67 ; 3/4 = 0,75. Ordre croissant : 1/4 < 1/2 < 2/3 < 3/4.',
+    f_exoApp:'1. Simplifier les fractions suivantes : 12/18, 20/25, 36/48.\n2. Calculer : 4/11 + 5/11 - 2/11.\n3. Un fermier vend 2/5 de sa récolte le matin et 1/4 l\'après-midi. Fraction totale vendue ?',
+    f_solExo:'1. 12/18 = 2/3 ; 20/25 = 4/5 ; 36/48 = 3/4.\n2. 4/11 + 5/11 - 2/11 = 7/11.\n3. 2/5 + 1/4 = 8/20 + 5/20 = 13/20.',
+    f_exoMaison:'Devoir : Famille Traoré.\n- 30 poulets à partager entre 5 familles\n- 48 L de boisson (verres de 1/3 L)\n- 60 sachets sucre : 2/5 pour le thé, 1/4 pour les gâteaux. Reste ?',
+    f_solMaison:'1. 1/5 → 6 poulets/famille.\n2. 48 ÷ 1/3 = 144 verres.\n3. Thé : 60×2/5=24 ; Gâteaux : 60×1/4=15.\n4. Reste : 7/20 → 21 sachets.',
+    f_cap1:'Représenter : Traduire une fraction sous forme graphique, numérique et concrète\nComparer : Utiliser des stratégies adaptées pour comparer et ordonner\nCalculer : Maîtriser les opérations élémentaires avec précision\nRésoudre : Appliquer les fractions à des problèmes du quotidien',
+    f_cap2:'Communiquer : Exprimer clairement sa démarche avec un vocabulaire adapté\nModéliser : Traduire une situation réelle en langage mathématique\nRaisonner : Justifier ses choix et vérifier la cohérence des résultats\nAutonomiser : Développer des méthodes de travail personnelles',
+    f_evalForm:'Observation directe de la participation et de la manipulation\nQuestionnement : questions orales ciblées, explications des démarches\nExercices au tableau : correction immédiate avec rétroaction\nAuto-évaluation : fiche de positionnement après chaque séance',
+    f_evalSom:'Fiche d\'exercices notés (coefficient 1) — 30 minutes\nRésolution de problème contextualisé (coefficient 2) — 45 minutes\nPrésentation orale d\'une démarche de résolution (coefficient 1)\nQuestionnaire de synthèse (coefficient 3) — 60 minutes',
+    f_evalCrit:'Exactitude des calculs et des représentations (40 %)\nPertinence des méthodes utilisées (25 %)\nClarté des explications et du vocabulaire (20 %)\nCapacité à appliquer dans des situations nouvelles (10 %)\nAutonomie et prise d\'initiative (5 %)',
+    f_domaines:'Alimentation : Partage de nourriture, recettes traditionnelles\nCommerce : Mesures au marché, calcul des prix\nAgriculture : Répartition des récoltes, surfaces cultivables\nArtisanat : Proportions dans la fabrication, mesures',
+    f_liens:'SVT : Proportion dans l\'alimentation, croissance\nGéographie : Répartition des ressources, démographie\nHistoire : Mesures anciennes, systèmes de comptage\nÉducation civique : Partage équitable, solidarité',
+    f_exemples:'Partager 24 ignames entre 8 familles de façon équitable\nMesurer 3/4 kg de riz avec une balance traditionnelle\nCalculer la part de chacun dans une tontine de 12 personnes avec 60 000 FCFA',
+    f_diffDif:'Utilisation systématique de matériel concret\nFractions simples (1/2, 1/3, 1/4)\nÉnoncés courts et illustrés\nTutorat par des élèves avancés',
+    f_diffAv:'Problèmes complexes en plusieurs étapes\nIntroduction aux fractions décimales\nCréation d\'exercices pour les camarades\nProjets interdisciplinaires',
+    f_ressources:'Manuel de mathématiques 6ème\nFiches de travail photocopiables\nMatériel de manipulation à fabriquer\nVidéos éducatives sur les fractions',
+    f_remarquesFin:'Insister sur le sens avant la technique\nValoriser toutes les démarches de résolution\nFaire verbaliser les difficultés rencontrées\nMaintenir un lien constant avec le concret',
+    f_deroulement:'Phase 1 : Rappel des prérequis et mise en situation (10 min)\nPhase 2 : Activité de découverte par manipulation guidée (15 min)\nPhase 3 : Mise en commun et institutionnalisation (10 min)\nPhase 4 : Exercices d\'application et entraînement (15 min)\nPhase 5 : Synthèse, évaluation et remédiation (10 min)',
+    f_defImg:'',f_defImgLeg:'',f_propImg:'',f_propImgLeg:'',f_remarqueImg:'',f_remarqueImgLeg:'',
+    f_exempleImg:'',f_exempleImgLeg:'',f_activiteImg:'',f_activiteImgLeg:'',f_solActiviteImg:'',f_solActiviteImgLeg:'',
+    f_exoAppImg:'',f_exoAppImgLeg:'',f_solExoImg:'',f_solExoImgLeg:'',f_exoMaisonImg:'',f_exoMaisonImgLeg:'',f_solMaisonImg:'',f_solMaisonImgLeg:'',
+    f_s1_titre:'Découverte et Représentation',f_s1_duree:'60 min',f_s1_obj:'Construire le concept de fraction',f_s1_mat:'Bandes de papier, fruits',
+    f_s2_titre:'Comparaison et Rangement',f_s2_duree:'75 min',f_s2_obj:'Développer des stratégies de comparaison',f_s2_mat:'Disques fractionnés',
+    f_s3_titre:'Opérations et Applications',f_s3_duree:'75 min',f_s3_obj:'Maîtriser les opérations élémentaires',f_s3_mat:'Calculatrices, fiches'
+  };
+  for(const[id,val]of Object.entries(defs)){const el=$(id);if(el&&el.type!=='file')el.value=val;}
+  Object.keys(imgData).forEach(k=>delete imgData[k]);sc=3;rS();apercuImage();generer();toast('↺ Réinitialisé');
+}
 
-\\vspace{1cm}
-`;
-
-            // Récupérer le contenu des sections
-            const sections = document.querySelectorAll('.content-block');
-            
-            sections.forEach(section => {
-                const sectionType = section.dataset.type;
-                const numberingType = section.dataset.numbering || 'none';
-                
-                if (sectionType === 'image') {
-                    const captionInput = section.querySelector('input[type="text"]');
-                    const caption = captionInput ? captionInput.value : '';
-                    
-                    latexCode += `
-\\begin{figure}[h]
-    \\centering
-    \\includegraphics[width=0.8\\textwidth]{image_placeholder}
-    \\caption{${escapeLaTeX(caption)}}
-\\end{figure}
-`;
-                } else {
-                    const editor = section.querySelector('.text-editor');
-                    if (editor) {
-                        const content = editor.innerHTML;
-                        
-                        // Convertir le HTML en LaTeX basique
-                        let latexContent = content
-                            .replace(/<strong>(.*?)<\/strong>/g, '\\textbf{$1}')
-                            .replace(/<b>(.*?)<\/b>/g, '\\textbf{$1}')
-                            .replace(/<em>(.*?)<\/em>/g, '\\emph{$1}')
-                            .replace(/<i>(.*?)<\/i>/g, '\\emph{$1}')
-                            .replace(/<u>(.*?)<\/u>/g, '\\underline{$1}')
-                            .replace(/<br>/g, '\\\\')
-                            .replace(/<p>/g, '')
-                            .replace(/<\/p>/g, '\\\\')
-                            .replace(/<div>/g, '')
-                            .replace(/<\/div>/g, '')
-                            .replace(/&nbsp;/g, ' ')
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>');
-                        
-                        let sectionTitle = '';
-                        switch(sectionType) {
-                            case 'definition':
-                                sectionTitle = 'Définition';
-                                break;
-                            case 'theorem':
-                                sectionTitle = 'Théorème';
-                                break;
-                            case 'example':
-                                sectionTitle = 'Exemple';
-                                break;
-                            case 'exercise':
-                                sectionTitle = 'Exercice';
-                                break;
-                            case 'problem':
-                                sectionTitle = 'Problème';
-                                break;
-                            case 'student-work':
-                                sectionTitle = 'Travail élève';
-                                break;
-                            case 'solution':
-                                sectionTitle = 'Solution';
-                                break;
-                            case 'homework':
-                                sectionTitle = 'Devoir maison';
-                                break;
-                            case 'prerequisites':
-                                sectionTitle = 'Prérequis';
-                                break;
-                            case 'materials':
-                                sectionTitle = 'Matériel nécessaire';
-                                break;
-                            case 'strategy':
-                                sectionTitle = 'Stratégie pédagogique';
-                                break;
-                        }
-                        
-                        if (numberingType === 'roman') {
-                            latexCode += `
-\\section{${escapeLaTeX(sectionTitle)}}
-${escapeLaTeX(latexContent)}
-`;
-                        } else if (numberingType === 'letter') {
-                            latexCode += `
-\\subsection{${escapeLaTeX(sectionTitle)}}
-${escapeLaTeX(latexContent)}
-`;
-                        } else {
-                            latexCode += `
-\\textbf{${escapeLaTeX(sectionTitle)}:} ${escapeLaTeX(latexContent)}
-`;
-                        }
-                    }
-                }
-            });
-            
-            latexCode += `
-\\end{document}
-`;
-            
-            return latexCode;
-        }
-        
-        // Fonction pour échapper les caractères spéciaux LaTeX
-        function escapeLaTeX(text) {
-            if (!text) return '';
-            
-            return text
-                .replace(/\\/g, '\\textbackslash{}')
-                .replace(/#/g, '\\#')
-                .replace(/\$/g, '\\$')
-                .replace(/%/g, '\\%')
-                .replace(/&/g, '\\&')
-                .replace(/_/g, '\\_')
-                .replace(/{/g, '\\{')
-                .replace(/}/g, '\\}')
-                .replace(/~/g, '\\textasciitilde{}')
-                .replace(/\^/g, '\\textasciicircum{}');
-        }
-        
-        // Fonction pour afficher l'aperçu seul
-        function showViewOnlyPreview() {
-            // Mettre à jour l'aperçu
-            updatePreview();
-            
-            // Créer l'overlay
-            const overlay = document.createElement('div');
-            overlay.className = 'view-only-overlay';
-            overlay.innerHTML = `
-                <div class="view-only-content">
-                    <button class="close-btn" onclick="this.parentElement.parentElement.remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <div id="view-only-preview"></div>
-                </div>
-            `;
-            
-            // Copier le contenu de l'aperçu
-            const previewContent = document.getElementById('lesson-preview').cloneNode(true);
-            overlay.querySelector('#view-only-preview').appendChild(previewContent);
-            
-            // Ajouter l'overlay au document
-            document.body.appendChild(overlay);
-        }
-        
-        // Fonction pour charger les leçons filtrées
-        function loadFilteredLessons() {
-            // Cette fonctionnalité serait implémentée dans une version complète
-            alert('Fonctionnalité de filtrage à implémenter');
-        }
-        
-        // Fonction pour effacer les filtres
-        function clearFilters() {
-            document.getElementById('filter-subject').value = '';
-            document.getElementById('filter-discipline').value = '';
-            document.getElementById('filter-date').value = '';
-            loadSavedLessons();
-        }
-    </script>
+rS();
+window.addEventListener('DOMContentLoaded',generer);
+</script>
 </body>
 </html>
