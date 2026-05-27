@@ -3,1230 +3,803 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Générateur de Rapport de Conseil/Assises</title>
+    <title>RapportPro — Générateur professionnel de rapports</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
-            --success-color: #27ae60;
-            --light-color: #ecf0f1;
-            --dark-color: #2c3e50;
+            --primary: #1a3a5c;
+            --primary-light: #2c5f8a;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --light: #f0f4f8;
+            --gray: #95a5a6;
+            --dark: #2c3e50;
+            --shadow: 0 8px 25px rgba(0,0,0,0.08);
+            --radius: 14px;
         }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%); color: #333; line-height: 1.6; min-height: 100vh; }
+
+        .app-container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+
+        .app-header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; padding: 28px 24px; border-radius: var(--radius) var(--radius) 0 0; text-align: center; position: relative; overflow: hidden; }
+        .app-header::before { content: ''; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px; background: rgba(255,255,255,0.05); border-radius: 50%; }
+        .app-header h1 { font-size: 2rem; font-weight: 700; position: relative; }
+        .app-header .subtitle { opacity: 0.85; font-size: 1.05rem; margin-top: 6px; position: relative; }
+
+        .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; transition: all 0.2s; }
+        .card-title { font-size: 1.15rem; font-weight: 600; color: var(--primary); margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--light); display: flex; align-items: center; gap: 10px; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; color: var(--dark); font-size: 0.9rem; }
+        .form-control, input[type="text"], input[type="datetime-local"], input[type="date"], select, textarea {
+            width: 100%; padding: 11px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s; background: #fafcff;
         }
-        
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            line-height: 1.6;
+        .form-control:focus, input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary); outline: none; box-shadow: 0 0 0 3px rgba(52,152,219,0.15);
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 20px 0;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 20px;
-        }
-        
-        h1 {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-        }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-        
-        .form-section, .report-section, .saved-reports-section {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 25px;
-            margin-bottom: 25px;
-        }
-        
-        h2 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--light-color);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--dark-color);
-        }
-        
-        input[type="text"],
-        input[type="datetime-local"],
-        input[type="date"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-        
-        input[type="text"]:focus,
-        input[type="datetime-local"]:focus,
-        input[type="date"]:focus,
-        select:focus,
-        textarea:focus {
-            border-color: var(--secondary-color);
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-        
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        .agenda-item {
-            background-color: var(--light-color);
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-        }
-        
-        .agenda-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .agenda-item-title {
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-        
-        .remove-item {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        
-        .remove-item:hover {
-            background-color: #c0392b;
-        }
-        
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-        
-        .btn-secondary {
-            background-color: var(--light-color);
-            color: var(--dark-color);
-            margin-right: 10px;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #d5dbdb;
-        }
-        
-        .btn-success {
-            background-color: var(--success-color);
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background-color: #219653;
-        }
-        
-        .btn-danger {
-            background-color: var(--accent-color);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-        
-        .button-group {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 20px;
-            gap: 10px;
-        }
-        
-        .report {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-        }
-        
-        .report-header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 20px;
-        }
-        
-        .report-title {
-            color: var(--primary-color);
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-        }
-        
-        .report-meta {
-            color: #666;
-            font-style: italic;
-        }
-        
-        .report-section {
-            margin-bottom: 25px;
-        }
-        
-        .agenda-point {
-            margin-bottom: 15px;
-        }
-        
-        .agenda-point-title {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--primary-color);
-        }
-        
-        .agenda-point-content {
-            margin-left: 20px;
-            color: #555;
-        }
-        
-        .signature-section {
-            margin-top: 40px;
-            text-align: right;
-        }
-        
-        .signature-line {
-            width: 300px;
-            border-bottom: 1px solid #333;
-            margin: 40px auto 5px;
-            display: inline-block;
-        }
-        
-        .signature-label {
-            font-style: italic;
-            color: #666;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        /* Styles pour la section des rapports sauvegardés */
-        .filters {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .filter-group {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .saved-reports-list {
-            max-height: 500px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .report-item {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .report-item:last-child {
-            border-bottom: none;
-        }
-        
-        .report-item:hover {
-            background-color: #f9f9f9;
-        }
-        
-        .report-item-info {
-            flex: 1;
-        }
-        
-        .report-item-title {
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 5px;
-        }
-        
-        .report-item-meta {
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        .report-item-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-        
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            color: #ddd;
-        }
-        
-        /* Styles pour les options de rédaction */
-        .writing-options {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-        
-        .writing-options h3 {
-            margin-bottom: 15px;
-            color: var(--primary-color);
-        }
-        
-        .writing-style-selector {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .writing-style-option {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .writing-style-option label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-        }
-        
-        .writing-style-option input {
-            width: auto;
-        }
-        
-        .discourse-flow {
-            background-color: #e8f4fc;
-            border-left: 4px solid var(--secondary-color);
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .transition-phrase {
-            font-style: italic;
-            color: var(--secondary-color);
-            margin: 10px 0;
-            font-weight: 500;
-        }
-        
+        textarea { min-height: 90px; resize: vertical; }
+        .char-count { text-align: right; font-size: 0.8rem; color: var(--gray); margin-top: 3px; }
+
+        .btn { padding: 10px 18px; border: none; border-radius: 30px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+            transition: all 0.2s; display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 3px 8px rgba(0,0,0,0.06); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+        .btn-sm { padding: 7px 14px; font-size: 0.85rem; }
+        .btn-primary { background: var(--secondary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-danger { background: var(--accent); color: white; }
+        .btn-dangerous { background: #7b241c; color: white; border: 2px solid var(--accent); }
+        .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+        .btn-ghost { background: var(--light); color: var(--dark); box-shadow: none; }
+        .button-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+
+        .writing-options { background: var(--light); padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+        .writing-options h3 { font-size: 0.95rem; margin-bottom: 12px; color: var(--primary); }
+        .writing-style-selector { display: flex; gap: 12px; flex-wrap: wrap; }
+        .writing-style-option { flex: 1; min-width: 160px; padding: 10px 14px; background: white; border: 2px solid #e2e8f0; border-radius: 30px; cursor: pointer; transition: all 0.2s; }
+        .writing-style-option:has(input:checked) { border-color: var(--secondary); background: #ebf5fb; }
+        .writing-style-option label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; margin: 0; }
+        .writing-style-option input { width: auto; }
+
+        .agenda-item { background: var(--light); border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--secondary); transition: all 0.2s; }
+        .agenda-item.dragging { opacity: 0.5; }
+        .agenda-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; cursor: grab; }
+        .agenda-item-header:active { cursor: grabbing; }
+        .agenda-item-title { font-weight: 600; color: var(--primary); font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+        .agenda-item-title .drag-handle { color: var(--gray); font-size: 0.85rem; }
+        .remove-item { background: var(--accent); color: white; border: none; border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+        .remove-item:hover { background: #c0392b; }
+
+        .report-display { background: white; padding: 30px 35px; border-radius: var(--radius); box-shadow: var(--shadow); margin-top: 16px; }
+        .report-display .report-header { text-align: center; margin-bottom: 28px; border-bottom: 2px solid var(--primary); padding-bottom: 18px; }
+        .report-display .report-title { color: var(--primary); font-size: 1.6rem; margin-bottom: 8px; }
+        .report-display .report-meta { color: var(--gray); font-style: italic; }
+        .report-display .report-section { margin-bottom: 24px; }
+        .report-display h2 { font-size: 1.25rem; color: var(--primary); border-bottom: 2px solid var(--light); padding-bottom: 8px; margin-bottom: 14px; }
+        .report-display .agenda-point { margin-bottom: 14px; }
+        .report-display .agenda-point-title { font-weight: 600; color: var(--primary); margin-bottom: 6px; }
+        .report-display .agenda-point-content { margin-left: 18px; color: #555; }
+        .report-display .signature-section { margin-top: 36px; text-align: right; }
+        .report-display .signature-line { width: 280px; border-bottom: 1px solid #333; margin: 36px auto 5px; display: inline-block; }
+        .report-display .signature-label { font-style: italic; color: var(--gray); }
+        .report-display .discourse-flow { background: #e8f4fc; border-left: 4px solid var(--secondary); padding: 14px 18px; margin: 16px 0; border-radius: 0 10px 10px 0; }
+        .report-display .transition-phrase { font-style: italic; color: var(--secondary); margin: 10px 0; font-weight: 500; }
+
+        .notification { position: fixed; top: 20px; right: 20px; padding: 14px 20px; border-radius: 12px; color: white; font-weight: 500;
+            z-index: 9999; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 380px; display: flex; align-items: center; gap: 10px; }
+        .notification.show { transform: translateX(0); }
+        .notification.info { background: var(--secondary); }
+        .notification.success { background: var(--success); }
+        .notification.error { background: var(--accent); }
+
+        .saved-reports-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-bottom: 12px; border-bottom: 2px solid var(--light); margin-bottom: 16px; }
+        .saved-reports-header h2 { margin: 0; border: none; padding: 0; }
+        .filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+        .filter-group { flex: 1; min-width: 180px; }
+        .filter-group label { font-size: 0.85rem; margin-bottom: 4px; }
+
+        .saved-reports-list { max-height: 520px; overflow-y: auto; border: 2px solid var(--light); border-radius: 10px; }
+        .report-item { padding: 14px 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; gap: 12px; transition: background 0.2s; }
+        .report-item:last-child { border-bottom: none; }
+        .report-item:hover { background: #f9fbfd; }
+        .report-item-info { flex: 1; min-width: 0; }
+        .report-item-title { font-weight: 600; color: var(--primary); margin-bottom: 3px; }
+        .report-item-meta { color: var(--gray); font-size: 0.85rem; }
+        .report-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--gray); }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.3; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); z-index: 6000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: white; border-radius: 18px; padding: 28px; max-width: 440px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+
+        /* PROJECTION */
+        .proj-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a2e; z-index: 5000; flex-direction: column; }
+        .proj-overlay.active { display: flex; }
+        .proj-toolbar { background: #16213e; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; color: white; flex-shrink: 0; border-bottom: 2px solid #0f3460; }
+        .proj-toolbar .left, .proj-toolbar .right { display: flex; align-items: center; gap: 10px; }
+        .proj-toolbar button { background: rgba(255,255,255,0.1); border: none; color: white; padding: 7px 14px; border-radius: 30px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; transition: all 0.2s; }
+        .proj-toolbar button:hover { background: rgba(255,255,255,0.2); }
+        .proj-toolbar button.danger { background: #c0392b; }
+        .proj-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; background: radial-gradient(ellipse at center, #16213e 0%, #0a0a1a 100%); }
+        .proj-slide { max-width: 960px; width: 100%; max-height: 82vh; background: white; border-radius: 20px; padding: 45px 55px; overflow-y: auto; box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            transform: scale(0.95); opacity: 0; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .proj-slide.active { transform: scale(1); opacity: 1; }
+        .proj-slide h2 { font-size: 1.8rem; color: var(--primary); border-bottom: 3px solid var(--secondary); padding-bottom: 12px; margin-bottom: 24px; }
+        .proj-slide .content-block { font-size: 1.2rem; line-height: 1.6; }
+        .proj-slide .slide-title-slide { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 55vh; }
+        .proj-slide .slide-title-slide h1 { font-size: 2.6rem; color: var(--primary); margin-bottom: 16px; }
+        .proj-slide .slide-title-slide .subtitle { font-size: 1.2rem; color: var(--secondary); }
+        .proj-slide::-webkit-scrollbar { width: 6px; }
+        .proj-slide::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 10px; }
+
         @media print {
-            .form-section, .button-group, .saved-reports-section {
-                display: none;
-            }
-            
-            .report-section {
-                box-shadow: none;
-                margin: 0;
-                padding: 0;
-            }
-            
-            body {
-                background-color: white;
-            }
+            .form-section, .saved-reports-section, .button-group, .proj-overlay, .notification { display: none !important; }
+            .report-display { box-shadow: none; padding: 0; }
+            body { background: white; }
         }
-        
         @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-            }
-            
-            .form-section, .report-section, .saved-reports-section {
-                padding: 15px;
-            }
-            
-            .filters {
-                flex-direction: column;
-            }
-            
-            .filter-group {
-                min-width: 100%;
-            }
-            
-            .report-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .report-item-actions {
-                margin-top: 10px;
-                width: 100%;
-                justify-content: flex-end;
-            }
-            
-            .writing-style-selector {
-                flex-direction: column;
-            }
+            .app-container { padding: 10px; }
+            .app-header h1 { font-size: 1.5rem; }
+            .card { padding: 16px; }
+            .proj-slide { padding: 20px; }
+            .proj-slide h2 { font-size: 1.4rem; }
+            .proj-slide .slide-title-slide h1 { font-size: 1.8rem; }
+            .proj-area { padding: 12px; }
+            .report-item { flex-direction: column; align-items: flex-start; }
+            .report-item-actions { width: 100%; justify-content: flex-end; }
+            .writing-style-selector { flex-direction: column; }
+            .filters { flex-direction: column; }
+            .report-display { padding: 16px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Générateur de Rapport de Conseil/Assises</h1>
-            <p class="subtitle">Créez automatiquement des rapports professionnels pour vos réunions</p>
-        </header>
-        
-        <section class="form-section">
-            <h2>Informations de la réunion</h2>
-            
+
+    <div class="app-container">
+        <div class="app-header">
+            <h1><i class="fas fa-file-alt"></i> RapportPro</h1>
+            <p class="subtitle">Générateur professionnel de rapports de réunion</p>
+        </div>
+
+        <section class="card form-section">
+            <div class="card-title"><i class="fas fa-info-circle"></i> Informations de la réunion</div>
+
             <div class="form-group">
                 <label for="meetingType">Type de réunion</label>
                 <select id="meetingType" class="form-control">
                     <option value="Conseil de Rentrée">Conseil de Rentrée</option>
                     <option value="Conseil d'enseignement">Conseil d'enseignement</option>
                     <option value="Journée pédagogique">Journée pédagogique</option>
-                    <option value="Conseil de fin du premier trimestre">Conseil de fin du premier trimestre</option>
-                     <option value="Conseil de fin du deuxième trimestre">Conseil de fin du deuxième trimestre</option>
+                    <option value="Conseil de fin du premier trimestre">Conseil de fin du 1er trimestre</option>
+                    <option value="Conseil de fin du deuxième trimestre">Conseil de fin du 2e trimestre</option>
                     <option value="Conseil de fin d'année scolaire">Conseil de fin d'année scolaire</option>
-                    <option value="Assemblée générale">Assemblée générale</option
+                    <option value="Assemblée générale">Assemblée générale</option>
+                    <option value="Réunion de coordination">Réunion de coordination</option>
+                    <option value="Comité de pilotage">Comité de pilotage</option>
                 </select>
             </div>
-            
             <div class="form-group">
                 <label for="meetingObject">Objet de la réunion</label>
-                <input type="text" id="meetingObject" placeholder="Ex: Réunion trimestrielle du conseil d'administration">
+                <input type="text" id="meetingObject" placeholder="Ex: Bilan trimestriel des activités pédagogiques">
             </div>
-            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group">
+                    <label for="meetingDate">Date et heure de début</label>
+                    <input type="datetime-local" id="meetingDate">
+                </div>
+                <div class="form-group">
+                    <label for="meetingEndDate">Date et heure de fin</label>
+                    <input type="datetime-local" id="meetingEndDate">
+                </div>
+            </div>
             <div class="form-group">
-                <label for="meetingDate">Date et heure de début</label>
-                <input type="datetime-local" id="meetingDate">
+                <label for="meetingLocation">Lieu</label>
+                <input type="text" id="meetingLocation" placeholder="Ex: Salle polyvalente, Lycée">
             </div>
-            
             <div class="form-group">
-                <label for="meetingEndDate">Date et heure de fin</label>
-                <input type="datetime-local" id="meetingEndDate">
+                <label for="secretaryName">Secrétaire de séance</label>
+                <input type="text" id="secretaryName" placeholder="Ex: KOLA Jean">
             </div>
-            
-            <div class="form-group">
-                <label for="meetingLocation">Lieu de la réunion</label>
-                <input type="text" id="meetingLocation" placeholder="Ex: Salle de conférence A, Siège social">
-            </div>
-            
-            <div class="form-group">
-                <label for="secretaryName">Nom et prénoms du secrétaire de séance</label>
-                <input type="text" id="secretaryName" placeholder="Ex: DUPONT Jean">
-            </div>
-            
+
             <div class="writing-options">
-                <h3>Options de rédaction</h3>
+                <h3><i class="fas fa-pen-fancy"></i> Style de rédaction</h3>
                 <div class="writing-style-selector">
-                    <div class="writing-style-option">
-                        <label>
-                            <input type="radio" name="writingStyle" value="formal" checked>
-                            Style formel (administratif)
-                        </label>
-                    </div>
-                    <div class="writing-style-option">
-                        <label>
-                            <input type="radio" name="writingStyle" value="educational">
-                            Style pédagogique (enseignant)
-                        </label>
-                    </div>
-                    <div class="writing-style-option">
-                        <label>
-                            <input type="radio" name="writingStyle" value="dynamic">
-                            Discours animé
-                        </label>
-                    </div>
+                    <div class="writing-style-option"><label><input type="radio" name="writingStyle" value="formal" checked> <i class="fas fa-briefcase"></i> Formel</label></div>
+                    <div class="writing-style-option"><label><input type="radio" name="writingStyle" value="educational"> <i class="fas fa-chalkboard-teacher"></i> Pédagogique</label></div>
+                    <div class="writing-style-option"><label><input type="radio" name="writingStyle" value="dynamic"> <i class="fas fa-microphone-alt"></i> Discours animé</label></div>
                 </div>
             </div>
-            
-            <h2>Ordre du jour</h2>
-            
-            <div id="agendaItems">
-                <!-- Les éléments de l'ordre du jour seront ajoutés ici dynamiquement -->
-            </div>
-            
-            <button id="addAgendaItem" class="btn btn-secondary">Ajouter un point à l'ordre du jour</button>
-            
-            <div class="button-group">
-                <button id="generateReport" class="btn btn-primary">Générer le rapport</button>
-                <button id="resetForm" class="btn btn-danger">Réinitialiser</button>
+
+            <div class="card-title" style="margin-top:20px;"><i class="fas fa-list-ol"></i> Ordre du jour</div>
+            <div id="agendaItems"></div>
+            <button id="addAgendaItem" class="btn btn-ghost"><i class="fas fa-plus-circle"></i> Ajouter un point</button>
+
+            <div class="button-group" style="justify-content:flex-end; margin-top:18px;">
+                <button id="resetForm" class="btn btn-danger"><i class="fas fa-undo"></i> Réinitialiser</button>
+                <button id="projectReport" class="btn btn-dangerous"><i class="fas fa-presentation-screen"></i> Projeter</button>
+                <button id="generateReport" class="btn btn-primary" style="padding:12px 24px;"><i class="fas fa-file-alt"></i> Générer le rapport</button>
             </div>
         </section>
-        
-        <section id="reportSection" class="report-section hidden">
-            <div class="button-group">
-                <button id="saveReport" class="btn btn-success">Sauvegarder le rapport</button>
-                <button id="printReport" class="btn btn-primary">Imprimer le rapport</button>
-                <button id="editReport" class="btn btn-secondary">Modifier les informations</button>
+
+        <section id="reportSection" class="card" style="display:none;">
+            <div class="button-group" style="justify-content:flex-end;">
+                <button id="editReport" class="btn btn-ghost"><i class="fas fa-edit"></i> Modifier</button>
+                <button id="projectGeneratedReport" class="btn btn-dangerous"><i class="fas fa-presentation-screen"></i> Projeter</button>
+                <button id="printReport" class="btn btn-primary"><i class="fas fa-print"></i> Imprimer</button>
+                <button id="saveReport" class="btn btn-success"><i class="fas fa-save"></i> Sauvegarder</button>
             </div>
-            
-            <div class="report" id="generatedReport">
-                <!-- Le rapport généré sera inséré ici -->
-            </div>
+            <div class="report-display" id="generatedReport"></div>
         </section>
-        
-        <section class="saved-reports-section">
-            <h2>Rapports sauvegardés</h2>
-            
+
+        <section class="card">
+            <div class="saved-reports-header">
+                <h2 class="card-title" style="margin:0;border:none;padding:0;"><i class="fas fa-archive"></i> Rapports sauvegardés</h2>
+                <button id="resetReportsDB" class="btn btn-dangerous btn-sm"><i class="fas fa-database"></i> Réinitialiser la base</button>
+            </div>
             <div class="filters">
-                <div class="filter-group">
-                    <label for="filterDate">Filtrer par date</label>
-                    <input type="date" id="filterDate">
-                </div>
-                
-                <div class="filter-group">
-                    <label for="filterType">Filtrer par type</label>
-                    <select id="filterType">
-                        <option value="">Tous les types</option>
-                        <option value="Conseil">Conseil</option>
-                        <option value="Assises">Assises</option>
-                        <option value="Comité">Comité</option>
-                        <option value="Assemblée">Assemblée</option>
+                <div class="filter-group"><label for="filterDate">Date</label><input type="date" id="filterDate" class="form-control"></div>
+                <div class="filter-group"><label for="filterType">Type</label>
+                    <select id="filterType" class="form-control">
+                        <option value="">Tous</option><option value="Conseil">Conseil</option>
+                        <option value="Assises">Assises</option><option value="Comité">Comité</option>
+                        <option value="Assemblée">Assemblée</option><option value="Réunion">Réunion</option>
                     </select>
                 </div>
-                
-                <div class="filter-group">
-                    <label for="filterKeyword">Filtrer par mot-clé</label>
-                    <input type="text" id="filterKeyword" placeholder="Rechercher...">
+                <div class="filter-group"><label for="filterKeyword">Mot-clé</label><input type="text" id="filterKeyword" class="form-control" placeholder="Rechercher..."></div>
+                <div class="filter-group" style="flex:0 0 auto; display:flex; align-items:flex-end;">
+                    <button id="clearFilters" class="btn btn-ghost btn-sm"><i class="fas fa-times"></i> Effacer</button>
                 </div>
             </div>
-            
-            <div id="savedReportsList" class="saved-reports-list">
-                <!-- Les rapports sauvegardés seront affichés ici -->
-            </div>
+            <div id="savedReportsList" class="saved-reports-list"></div>
         </section>
+    </div>
+
+    <!-- PROJECTION -->
+    <div class="proj-overlay" id="proj-overlay">
+        <div class="proj-toolbar">
+            <div class="left">
+                <span style="font-weight:600;"><i class="fas fa-presentation-screen"></i> Projection</span>
+                <span id="proj-counter">1 / 1</span>
+                <button id="proj-prev"><i class="fas fa-chevron-left"></i></button>
+                <button id="proj-next"><i class="fas fa-chevron-right"></i></button>
+                <button id="proj-autoplay"><i class="fas fa-play"></i> Auto</button>
+            </div>
+            <div class="right">
+                <button id="proj-fullscreen"><i class="fas fa-expand"></i> Plein écran</button>
+                <button id="proj-close" class="danger"><i class="fas fa-times"></i> Quitter</button>
+            </div>
+        </div>
+        <div class="proj-area">
+            <div class="proj-slide" id="proj-slide"></div>
+        </div>
+    </div>
+
+    <!-- RESET DB MODAL -->
+    <div class="modal-overlay" id="reset-db-modal">
+        <div class="modal-box" style="text-align:center;">
+            <div style="font-size:3rem; margin-bottom:12px;">🗄️</div>
+            <h3 style="color:var(--primary);margin-bottom:10px;">Réinitialiser la base</h3>
+            <p>Voulez-vous vraiment <strong>supprimer définitivement</strong> tous les rapports sauvegardés ?</p>
+            <p style="color:var(--accent);font-weight:bold;margin:12px 0;">Cette action est irréversible.</p>
+            <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;">
+                <button class="btn btn-ghost" id="cancel-reset-db">Annuler</button>
+                <button class="btn btn-danger" id="confirm-reset-db">Tout effacer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle" id="notif-icon"></i>
+        <span id="notif-text"></span>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Éléments du DOM
-            const addAgendaItemBtn = document.getElementById('addAgendaItem');
-            const agendaItemsContainer = document.getElementById('agendaItems');
-            const generateReportBtn = document.getElementById('generateReport');
-            const resetFormBtn = document.getElementById('resetForm');
-            const reportSection = document.getElementById('reportSection');
-            const generatedReport = document.getElementById('generatedReport');
-            const printReportBtn = document.getElementById('printReport');
-            const editReportBtn = document.getElementById('editReport');
-            const saveReportBtn = document.getElementById('saveReport');
-            const savedReportsList = document.getElementById('savedReportsList');
-            const filterDate = document.getElementById('filterDate');
-            const filterType = document.getElementById('filterType');
-            const filterKeyword = document.getElementById('filterKeyword');
-            
-            // Variables
-            let agendaItemCount = 0;
-            let savedReports = JSON.parse(localStorage.getItem('savedReports')) || [];
-            let currentReportId = null;
-            
-            // Initialiser l'affichage des rapports sauvegardés
-            displaySavedReports();
-            
-            // Ajouter un point à l'ordre du jour
-            addAgendaItemBtn.addEventListener('click', function() {
-                agendaItemCount++;
-                const agendaItem = document.createElement('div');
-                agendaItem.className = 'agenda-item';
-                agendaItem.innerHTML = `
+            const $ = id => document.getElementById(id);
+            const $$ = (sel, ctx) => (ctx || document).querySelectorAll(sel);
+
+            const agendaContainer = $('agendaItems');
+            const generateBtn = $('generateReport');
+            const resetFormBtn = $('resetForm');
+            const reportSection = $('reportSection');
+            const generatedReport = $('generatedReport');
+            const printBtn = $('printReport');
+            const editBtn = $('editReport');
+            const saveBtn = $('saveReport');
+            const list = $('savedReportsList');
+            const filterDate = $('filterDate');
+            const filterType = $('filterType');
+            const filterKeyword = $('filterKeyword');
+
+            let agendaCount = 0;
+            let savedReports = [];
+            let currentId = null;
+
+            try { const s = localStorage.getItem('rapportPro_reports'); if (s) savedReports = JSON.parse(s); } catch(e) { savedReports = []; }
+
+            // ===== NOTIFICATIONS =====
+            function notify(msg, type) {
+                const el = $('notification');
+                const icon = $('notif-icon');
+                const text = $('notif-text');
+                el.className = 'notification ' + (type || 'info');
+                icon.className = 'fas ' + (type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+                text.textContent = msg;
+                el.classList.add('show');
+                clearTimeout(el._timer);
+                el._timer = setTimeout(() => el.classList.remove('show'), 3000);
+            }
+
+            // ===== AGENDA ITEMS =====
+            function addAgendaItem(title, details) {
+                agendaCount++;
+                const div = document.createElement('div');
+                div.className = 'agenda-item';
+                div.draggable = true;
+                div.innerHTML = `
                     <div class="agenda-item-header">
-                        <span class="agenda-item-title">Point ${agendaItemCount}</span>
-                        <button type="button" class="remove-item">Supprimer</button>
+                        <span class="agenda-item-title"><span class="drag-handle"><i class="fas fa-grip-vertical"></i></span> Point ${agendaCount}</span>
+                        <button type="button" class="remove-item"><i class="fas fa-trash"></i></button>
                     </div>
                     <div class="form-group">
-                        <label for="agendaTitle${agendaItemCount}">Titre du point</label>
-                        <input type="text" id="agendaTitle${agendaItemCount}" placeholder="Ex: Approbation du procès-verbal précédent">
+                        <label for="agendaTitle${agendaCount}">Titre</label>
+                        <input type="text" id="agendaTitle${agendaCount}" class="form-control" placeholder="Ex: Approbation du PV" value="${(title||'').replace(/"/g,'&quot;')}">
                     </div>
                     <div class="form-group">
-                        <label for="agendaDetails${agendaItemCount}">Grandes lignes / Détails</label>
-                        <textarea id="agendaDetails${agendaItemCount}" placeholder="Décrivez les principaux points abordés, les discussions, les décisions prises..."></textarea>
-                    </div>
-                `;
-                
-                agendaItemsContainer.appendChild(agendaItem);
-                
-                // Ajouter l'événement de suppression
-                const removeBtn = agendaItem.querySelector('.remove-item');
-                removeBtn.addEventListener('click', function() {
-                    agendaItemsContainer.removeChild(agendaItem);
-                    updateAgendaItemNumbers();
+                        <label for="agendaDetails${agendaCount}">Détails / Grandes lignes</label>
+                        <textarea id="agendaDetails${agendaCount}" class="form-control" placeholder="Décrivez les discussions, décisions..." rows="3">${details||''}</textarea>
+                        <div class="char-count"><span id="count${agendaCount}">0</span> caractères</div>
+                    </div>`;
+                agendaContainer.appendChild(div);
+
+                div.querySelector('.remove-item').addEventListener('click', () => { div.remove(); renumberItems(); });
+                div.querySelector('textarea').addEventListener('input', function() {
+                    const c = div.querySelector('[id^="count"]');
+                    if (c) c.textContent = this.value.length;
                 });
-            });
-            
-            // Mettre à jour les numéros des points de l'ordre du jour
-            function updateAgendaItemNumbers() {
-                const agendaItems = agendaItemsContainer.querySelectorAll('.agenda-item');
-                agendaItemCount = agendaItems.length;
-                
-                agendaItems.forEach((item, index) => {
-                    const titleSpan = item.querySelector('.agenda-item-title');
-                    titleSpan.textContent = `Point ${index + 1}`;
-                    
-                    const titleInput = item.querySelector('input[type="text"]');
-                    const detailsTextarea = item.querySelector('textarea');
-                    
-                    titleInput.id = `agendaTitle${index + 1}`;
-                    detailsTextarea.id = `agendaDetails${index + 1}`;
-                    
-                    const titleLabel = item.querySelector('label[for^="agendaTitle"]');
-                    const detailsLabel = item.querySelector('label[for^="agendaDetails"]');
-                    
-                    titleLabel.setAttribute('for', `agendaTitle${index + 1}`);
-                    detailsLabel.setAttribute('for', `agendaDetails${index + 1}`);
+                div.querySelector('input').addEventListener('input', function() { autoSaveDraft(); });
+                div.querySelector('textarea').addEventListener('input', function() { autoSaveDraft(); });
+
+                // Drag & drop
+                div.addEventListener('dragstart', () => div.classList.add('dragging'));
+                div.addEventListener('dragend', () => div.classList.remove('dragging'));
+                div.addEventListener('dragover', e => { e.preventDefault(); const after = getDragAfter(div); if (after) agendaContainer.insertBefore(div, after); else agendaContainer.appendChild(div); });
+
+                return div;
+            }
+
+            function getDragAfter(el) {
+                const items = [...agendaContainer.querySelectorAll('.agenda-item:not(.dragging)')];
+                return items.find(item => {
+                    const rect = item.getBoundingClientRect();
+                    return event.clientY < rect.top + rect.height / 2;
+                }) || null;
+            }
+
+            function renumberItems() {
+                const items = agendaContainer.querySelectorAll('.agenda-item');
+                agendaCount = items.length;
+                items.forEach((item, i) => {
+                    const num = i + 1;
+                    item.querySelector('.agenda-item-title').childNodes[2].textContent = ` Point ${num}`;
+                    const inp = item.querySelector('input');
+                    const ta = item.querySelector('textarea');
+                    inp.id = `agendaTitle${num}`;
+                    ta.id = `agendaDetails${num}`;
+                    const lbls = item.querySelectorAll('label');
+                    if (lbls[0]) lbls[0].setAttribute('for', `agendaTitle${num}`);
+                    if (lbls[1]) lbls[1].setAttribute('for', `agendaDetails${num}`);
+                    const c = item.querySelector('[id^="count"]');
+                    if (c) c.id = `count${num}`;
                 });
             }
-            
-            // Générer le rapport
-            generateReportBtn.addEventListener('click', function() {
-                // Récupérer les valeurs du formulaire
-                const meetingType = document.getElementById('meetingType').value;
-                const meetingObject = document.getElementById('meetingObject').value;
-                const meetingDate = document.getElementById('meetingDate').value;
-                const meetingEndDate = document.getElementById('meetingEndDate').value;
-                const meetingLocation = document.getElementById('meetingLocation').value;
-                const secretaryName = document.getElementById('secretaryName').value;
+
+            function getAgendaItems() {
+                const items = [];
+                agendaContainer.querySelectorAll('.agenda-item').forEach(el => {
+                    const t = el.querySelector('input').value.trim();
+                    const d = el.querySelector('textarea').value;
+                    if (t) items.push({ title: t, details: d });
+                });
+                return items;
+            }
+
+            $('addAgendaItem').addEventListener('click', () => { addAgendaItem(); autoSaveDraft(); });
+
+            // ===== DRAFT AUTO-SAVE =====
+            function autoSaveDraft() {
+                const data = {
+                    meetingType: $('meetingType').value, meetingObject: $('meetingObject').value,
+                    meetingDate: $('meetingDate').value, meetingEndDate: $('meetingEndDate').value,
+                    meetingLocation: $('meetingLocation').value, secretaryName: $('secretaryName').value,
+                    writingStyle: document.querySelector('input[name="writingStyle"]:checked')?.value || 'formal',
+                    agendaItems: getAgendaItems()
+                };
+                try { localStorage.setItem('rapportPro_draft', JSON.stringify(data)); } catch(e) {}
+            }
+
+            function loadDraft() {
+                try {
+                    const d = localStorage.getItem('rapportPro_draft');
+                    if (!d) return;
+                    const data = JSON.parse(d);
+                    if (!data.meetingObject && !data.meetingLocation) return;
+                    $('meetingType').value = data.meetingType || 'Conseil de Rentrée';
+                    $('meetingObject').value = data.meetingObject || '';
+                    $('meetingDate').value = data.meetingDate || '';
+                    $('meetingEndDate').value = data.meetingEndDate || '';
+                    $('meetingLocation').value = data.meetingLocation || '';
+                    $('secretaryName').value = data.secretaryName || '';
+                    const radio = document.querySelector(`input[name="writingStyle"][value="${data.writingStyle}"]`);
+                    if (radio) radio.checked = true;
+                    (data.agendaItems || []).forEach(a => addAgendaItem(a.title, a.details));
+                } catch(e) {}
+            }
+
+            ['meetingType','meetingObject','meetingDate','meetingEndDate','meetingLocation','secretaryName'].forEach(id => {
+                $(id).addEventListener('input', autoSaveDraft);
+                $(id).addEventListener('change', autoSaveDraft);
+            });
+            document.querySelectorAll('input[name="writingStyle"]').forEach(r => r.addEventListener('change', autoSaveDraft));
+
+            // ===== CHARACTER COUNTS =====
+            document.addEventListener('input', function(e) {
+                if (e.target.matches('textarea[id^="agendaDetails"]')) {
+                    const id = e.target.id.replace('agendaDetails', '');
+                    const c = document.getElementById('count' + id);
+                    if (c) c.textContent = e.target.value.length;
+                }
+            });
+
+            // ===== GENERATE REPORT =====
+            function generateReportContent(meetingType, meetingObject, startDate, endDate, location, secretary, agendaItems, style, rawStart, rawEnd) {
+                let html = '';
+                html += `<div class="report-header"><h1 class="report-title">RAPPORT DE ${meetingType.toUpperCase()}</h1><p class="report-meta">${meetingObject}</p></div>`;
+
+                const startTime = rawStart ? rawStart.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }) : '';
+                const endTime = rawEnd ? rawEnd.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }) : '';
+                const duration = calculateDuration(rawStart, rawEnd);
+
+                html += '<div class="report-section"><h2>Introduction</h2>';
+                if (style === 'formal') {
+                    html += `<p>Le présent rapport a pour objet de consigner les délibérations et décisions prises lors de la ${meetingType.toLowerCase()} qui s'est tenue le ${startDate} dans les locaux de ${location}.</p><p>Cette séance, présidée par ${secretary} en qualité de secrétaire de séance, a réuni l'ensemble des membres concernés afin d'examiner les points inscrits à l'ordre du jour.</p>${endTime ? `<p>La séance s'est ouverte à ${startTime} et s'est clôturée à ${endTime}${duration ? ' (durée: ' + duration + ')' : ''}.</p>` : `<p>La séance s'est ouverte à ${startTime}.</p>`}`;
+                } else if (style === 'educational') {
+                    html += `<p>Ce document présente le compte-rendu détaillé de la ${meetingType.toLowerCase()} qui s'est déroulée le ${startDate} au sein de ${location}.</p><p>Sous la houlette de ${secretary}, qui en assurait le secrétariat, cette réunion a permis d'aborder l'ensemble des thématiques prévues.</p>${endTime ? `<p>La séance a débuté à ${startTime} pour s'achever à ${endTime}${duration ? ' (' + duration + ')' : ''}.</p>` : `<p>La séance a débuté à ${startTime}.</p>`}`;
+                } else {
+                    html += `<div class="discourse-flow"><p>Nous nous sommes réunis le ${rawStart ? rawStart.toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) : ''} dans l'enceinte de ${location} pour une ${meetingType.toLowerCase()} des plus importantes, consacrée à "${meetingObject}".</p><p>Animée par ${secretary} en qualité de secrétaire de séance, cette rencontre a débuté à ${startTime} dans une atmosphère studieuse et constructive.</p>${endTime ? `<p>Au fil des échanges qui se sont poursuivis jusqu'à ${endTime}${duration ? ' (' + duration + ')' : ''}, nous avons abordé les ${agendaItems.length} points essentiels.</p>` : ''}</div>`;
+                }
+                html += '</div>';
+
+                html += '<div class="report-section"><h2>Ordre du jour</h2>';
+                if (style === 'formal') html += `<p>L'ordre du jour comportait ${agendaItems.length} point${agendaItems.length > 1 ? 's' : ''} principal${agendaItems.length > 1 ? 'x' : ''} :</p>`;
+                else if (style === 'educational') html += `<p>L'ordre du jour, composé de ${agendaItems.length} point${agendaItems.length > 1 ? 's' : ''}, a structuré les échanges ainsi :</p>`;
+
+                agendaItems.forEach((item, i) => {
+                    html += `<div class="agenda-point"><div class="agenda-point-title">${i+1}. ${item.title}</div><div class="agenda-point-content">${fmtAgenda(item.details, style, i, agendaItems.length)}</div></div>`;
+                    if (style === 'dynamic' && i < agendaItems.length - 1) html += `<div class="transition-phrase">${genTransition()}</div>`;
+                });
+                html += '</div>';
+
+                html += '<div class="report-section"><h2>Synthèse et perspectives</h2>';
+                if (style === 'formal') {
+                    html += `<p>La ${meetingType.toLowerCase()} s'est déroulée dans un climat constructif. Les débats ont conduit à des décisions concertées mises en œuvre dans les délais impartis.</p><p>Un point d'étape sera programmé pour évaluer l'avancement.</p>`;
+                } else if (style === 'educational') {
+                    html += `<p>Cette ${meetingType.toLowerCase()} a été marquée par la qualité des échanges. Les décisions arrêtées témoignent d'une vision partagée.</p><p>Le suivi fera l'objet d'une attention particulière lors de la prochaine réunion.</p>`;
+                } else {
+                    html += `<div class="discourse-flow">${duration ? `<p>Au terme de cette réunion qui a duré ${duration}, nous pouvons affirmer que tous les objectifs ont été atteints.</p>` : ''}<p>Les échanges fructueux et les décisions prises collectivement témoignent de l'engagement de chacun.</p><p>Rendez-vous est pris pour notre prochaine rencontre.</p></div>`;
+                }
+                html += '</div>';
+
+                html += `<div class="signature-section"><p>Fait à ${location}, le ${rawStart ? rawStart.toLocaleDateString('fr-FR', { year:'numeric', month:'long', day:'numeric' }) : ''}</p><div class="signature-line"></div><p class="signature-label">Le Secrétaire de séance</p><p><strong>${secretary}</strong></p></div>`;
+                return html;
+            }
+
+            function fmtAgenda(details, style, idx, total) {
+                if (!details || !details.trim()) return '<em>Aucun détail</em>';
+                const lines = details.split('\n').filter(l => l.trim());
+                if (style === 'formal') return lines.map(l => `<p>${l.trim().replace(/\.?$/,'.')}</p>`).join('');
+                if (style === 'educational') return lines.map(l => `<p>${l.trim().length < 50 ? '<strong>'+l.trim()+'</strong>' : l.trim()}</p>`).join('');
+                const first = lines[0].split(':')[0] || lines[0].slice(0, 50);
+                let r = idx === 0 ? `<p>Pour commencer, nous avons abordé "${first}..."</p>` : idx === total-1 ? `<p>Enfin, nous nous sommes penchés sur "${first}..."</p>` : `<p>Poursuivant nos travaux, nous avons examiné "${first}..."</p>`;
+                r += lines.map(l => `<p>${l.trim()}</p>`).join('');
+                return r;
+            }
+
+            function genTransition() {
+                const t = ["Forts des conclusions de ce premier point, nous avons enchaîné avec le suivant.","Sur ces bases solides, nous avons poursuivi notre examen.","Ces éléments étant actés, l'assemblée s'est tournée vers le point suivant.","Après cet échange nourri, la discussion a porté sur le sujet suivant.","Une fois ce point clarifié, nous avons abordé la question suivante.","Ces décisions prises, nous avons poursuivi notre cheminement.","Sur cette dynamique, nous avons enchaîné avec le point suivant."];
+                return t[Math.floor(Math.random() * t.length)];
+            }
+
+            function calculateDuration(s, e) {
+                if (!s || !e) return '';
+                const d = new Date(e) - new Date(s);
+                if (d <= 0) return '';
+                const h = Math.floor(d / 3600000), m = Math.round((d % 3600000) / 60000);
+                if (!h) return `${m} mn`;
+                if (!m) return `${h} h`;
+                return `${h}h ${m}mn`;
+            }
+
+            generateBtn.addEventListener('click', function() {
+                const meetingType = $('meetingType').value;
+                const meetingObject = $('meetingObject').value.trim();
+                const meetingDate = $('meetingDate').value;
+                const meetingEndDate = $('meetingEndDate').value;
+                const meetingLocation = $('meetingLocation').value.trim();
+                const secretaryName = $('secretaryName').value.trim();
                 const writingStyle = document.querySelector('input[name="writingStyle"]:checked').value;
-                
-                // Récupérer les points de l'ordre du jour
-                const agendaItems = [];
-                const agendaElements = agendaItemsContainer.querySelectorAll('.agenda-item');
-                
-                agendaElements.forEach(item => {
-                    const title = item.querySelector('input[type="text"]').value;
-                    const details = item.querySelector('textarea').value;
-                    
-                    if (title.trim() !== '') {
-                        agendaItems.push({ title, details });
-                    }
-                });
-                
-                // Valider les champs obligatoires
+                const agendaItems = getAgendaItems();
+
                 if (!meetingObject || !meetingDate || !meetingLocation || !secretaryName || agendaItems.length === 0) {
-                    alert('Veuillez remplir tous les champs obligatoires : Objet, Date de début, Lieu, Secrétaire de séance et au moins un point à l\'ordre du jour.');
+                    notify('Veuillez remplir : Objet, Date, Lieu, Secrétaire et au moins 1 point.', 'error');
                     return;
                 }
-                
-                // Formater les dates
+
                 const startDate = new Date(meetingDate);
-                const endDate = new Date(meetingEndDate);
-                
-                const options = { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                };
-                
-                const formattedStartDate = startDate.toLocaleDateString('fr-FR', options);
-                const formattedEndDate = endDate.toLocaleDateString('fr-FR', options);
-                
-                // Générer le HTML du rapport selon le style choisi
-                let reportHTML = generateReportContent(
-                    meetingType, 
-                    meetingObject, 
-                    formattedStartDate, 
-                    formattedEndDate, 
-                    meetingLocation, 
-                    secretaryName, 
-                    agendaItems,
-                    writingStyle
-                );
-                
-                // Stocker les données du rapport actuel pour sauvegarde
-                currentReportId = Date.now();
-                const reportData = {
-                    id: currentReportId,
-                    meetingType,
-                    meetingObject,
-                    meetingDate,
-                    meetingEndDate,
-                    meetingLocation,
-                    secretaryName,
-                    agendaItems,
-                    writingStyle,
-                    generatedDate: new Date().toISOString()
-                };
-                
-                // Stocker les données dans l'élément généréReport pour récupération ultérieure
-                generatedReport.dataset.reportData = JSON.stringify(reportData);
-                
-                // Afficher le rapport
-                generatedReport.innerHTML = reportHTML;
-                reportSection.classList.remove('hidden');
-                
-                // Faire défiler vers le rapport
+                const endDate = meetingEndDate ? new Date(meetingEndDate) : startDate;
+                const opt = { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' };
+                const fSD = startDate.toLocaleDateString('fr-FR', opt);
+                const fED = endDate.toLocaleDateString('fr-FR', opt);
+
+                const html = generateReportContent(meetingType, meetingObject, fSD, fED, meetingLocation, secretaryName, agendaItems, writingStyle, startDate, endDate);
+
+                currentId = Date.now();
+                const data = { id: currentId, meetingType, meetingObject, meetingDate, meetingEndDate, meetingLocation, secretaryName, agendaItems: JSON.parse(JSON.stringify(agendaItems)), writingStyle, generatedDate: new Date().toISOString() };
+
+                generatedReport.dataset.data = JSON.stringify(data);
+                generatedReport.innerHTML = html;
+                reportSection.style.display = 'block';
                 reportSection.scrollIntoView({ behavior: 'smooth' });
+                notify('Rapport généré avec succès !', 'success');
             });
-            
-            // Générer le contenu du rapport selon le style choisi
-            function generateReportContent(meetingType, meetingObject, startDate, endDate, location, secretary, agendaItems, style) {
-                let content = '';
-                
-                // En-tête du rapport
-                content += `
-                    <div class="report-header">
-                        <h1 class="report-title">RAPPORT DE ${meetingType.toUpperCase()}</h1>
-                        <p class="report-meta">${meetingObject}</p>
-                    </div>
-                `;
-                
-                // Section d'introduction selon le style
-                content += '<div class="report-section">';
-                content += '<h2>Introduction</h2>';
-                
-                if (style === 'formal') {
-                    content += `
-                        <p>Le présent rapport a pour objet de consigner les délibérations et décisions prises lors de la ${meetingType.toLowerCase()} qui s'est tenue le ${startDate} dans les locaux de ${location}.</p>
-                        <p>Cette séance, présidée par ${secretary} en qualité de secrétaire de séance, a réuni l'ensemble des membres concernés afin d'examiner les points inscrits à l'ordre du jour.</p>
-                        <p>La séance s'est ouverte à ${startDate.split('à')[1]} et s'est clôturée à ${endDate.split('à')[1]}.</p>
-                    `;
-                } else if (style === 'educational') {
-                    content += `
-                        <p>Ce document présente le compte-rendu détaillé de la ${meetingType.toLowerCase()} qui s'est déroulée le ${startDate} au sein de ${location}.</p>
-                        <p>Sous la houlette de ${secretary}, qui en assurait le secrétariat, cette réunion a permis d'aborder l'ensemble des thématiques prévues à l'ordre du jour.</p>
-                        <p>La séance a débuté à ${startDate.split('à')[1]} pour s'achever à ${endDate.split('à')[1]}, permettant ainsi un examen approfondi de chaque point.</p>
-                    `;
-                } else {
-                    content += `
-                        <div class="discourse-flow">
-                            <p>Nous nous sommes réunis ce ${startDate.split(' ')[0]} dans l'enceinte de ${location} pour une ${meetingType.toLowerCase()} des plus importantes, consacrée à "${meetingObject}".</p>
-                            <p>Animée par ${secretary} en qualité de secrétaire de séance, cette rencontre a débuté à ${startDate.split('à')[1]} dans une atmosphère à la fois studieuse et constructive.</p>
-                            <p>Au fil des échanges qui se sont poursuivis jusqu'à ${endDate.split('à')[1]}, nous avons successivement abordé les ${agendaItems.length} points essentiels qui structuraient notre ordre du jour.</p>
-                        </div>
-                    `;
-                }
-                
-                content += '</div>';
-                
-                // Section ordre du jour
-                content += '<div class="report-section">';
-                content += '<h2>Ordre du jour</h2>';
-                
-                if (style === 'formal') {
-                    content += `<p>L'ordre du jour comportait ${agendaItems.length} points principaux :</p>`;
-                } else if (style === 'educational') {
-                    content += `<p>L'ordre du jour, composé de ${agendaItems.length} points, a structuré les échanges de la manière suivante :</p>`;
-                } else {
-                    content += `
-                        <div class="discourse-flow">
-                            <p>Notre parcours à travers l'ordre du jour nous a conduits à examiner successivement les points suivants :</p>
-                        </div>
-                    `;
-                }
-                
-                // Ajouter les points de l'ordre du jour
-                agendaItems.forEach((item, index) => {
-                    content += `
-                        <div class="agenda-point">
-                            <div class="agenda-point-title">${index + 1}. ${item.title}</div>
-                            <div class="agenda-point-content">${formatAgendaContent(item.details, style, index, agendaItems.length)}</div>
-                        </div>
-                    `;
-                    
-                    // Ajouter des transitions entre les points pour le style animé
-                    if (style === 'dynamic' && index < agendaItems.length - 1) {
-                        content += `<div class="transition-phrase">${generateTransition(index, agendaItems.length)}</div>`;
-                    }
-                });
-                
-                content += '</div>';
-                
-                // Section de synthèse selon le style
-                content += '<div class="report-section">';
-                content += '<h2>Synthèse et perspectives</h2>';
-                
-                if (style === 'formal') {
-                    content += `
-                        <p>La ${meetingType.toLowerCase()} s'est déroulée dans un climat constructif, permettant l'examen approfondi de l'ensemble des points à l'ordre du jour.</p>
-                        <p>Les débats ont été riches et ont conduit à des décisions concertées qui seront mises en œuvre dans les délais impartis.</p>
-                        <p>Un prochain point d'étape sera programmé afin d'évaluer l'avancement des décisions prises lors de la présente séance.</p>
-                    `;
-                } else if (style === 'educational') {
-                    content += `
-                        <p>Cette ${meetingType.toLowerCase()} a été marquée par la qualité des échanges et la pertinence des réflexions menées collectivement.</p>
-                        <p>Les décisions arrêtées à l'issue des discussions témoignent d'une vision partagée et d'un engagement commun pour la réussite des projets abordés.</p>
-                        <p>Le suivi des actions décidées fera l'objet d'une attention particulière lors de la prochaine réunion de travail.</p>
-                    `;
-                } else {
-                    content += `
-                        <div class="discourse-flow">
-                            <p>Au terme de cette ${meetingType.toLowerCase()} qui a duré près de ${calculateDuration(startDate, endDate)}, nous pouvons affirmer avec satisfaction que tous les objectifs fixés ont été atteints.</p>
-                            <p>Les échanges fructueux et les décisions prises collectivement témoignent de l'engagement de chacun pour faire avancer nos projets communs.</p>
-                            <p>Cette réunion aura été un moment fort de concertation et de réflexion stratégique, dont nous tirerons pleinement profit dans les semaines à venir.</p>
-                            <p>Rendez-vous est donc pris pour notre prochaine rencontre, où nous ferons le point sur l'avancement des décisions prises aujourd'hui.</p>
-                        </div>
-                    `;
-                }
-                
-                content += '</div>';
-                
-                // Section de signature
-                content += `
-                    <div class="signature-section">
-                        <p>Fait à ${location}, le ${startDate.split(' ').slice(0, 4).join(' ')}</p>
-                        <div class="signature-line"></div>
-                        <p class="signature-label">Le Secrétaire de séance</p>
-                        <p><strong>${secretary}</strong></p>
-                    </div>
-                `;
-                
-                return content;
+
+            saveBtn.addEventListener('click', function() {
+                const ds = generatedReport.dataset.data;
+                if (!ds) { notify('Générez d\'abord un rapport.', 'error'); return; }
+                const d = JSON.parse(ds);
+                const idx = savedReports.findIndex(r => r.id === d.id);
+                if (idx !== -1) savedReports[idx] = d; else savedReports.push(d);
+                try { localStorage.setItem('rapportPro_reports', JSON.stringify(savedReports)); } catch(e) {}
+                renderSaved();
+                notify('Rapport sauvegardé !', 'success');
+            });
+
+            printBtn.addEventListener('click', () => window.print());
+            editBtn.addEventListener('click', () => { reportSection.style.display = 'none'; document.querySelector('.form-section').scrollIntoView({ behavior:'smooth' }); });
+
+            resetFormBtn.addEventListener('click', function() {
+                if (!confirm('Réinitialiser le formulaire ?')) return;
+                $('meetingType').value = 'Conseil de Rentrée';
+                $('meetingObject').value = '';
+                $('meetingDate').value = '';
+                $('meetingEndDate').value = '';
+                $('meetingLocation').value = '';
+                $('secretaryName').value = '';
+                document.querySelector('input[name="writingStyle"][value="formal"]').checked = true;
+                agendaContainer.innerHTML = '';
+                agendaCount = 0;
+                reportSection.style.display = 'none';
+                currentId = null;
+                addAgendaItem();
+                try { localStorage.removeItem('rapportPro_draft'); } catch(e) {}
+                notify('Formulaire réinitialisé', 'info');
+            });
+
+            // ===== SAVED REPORTS =====
+            function getFiltered() {
+                let f = [...savedReports];
+                if (filterDate.value) { const fd = new Date(filterDate.value); f = f.filter(r => new Date(r.meetingDate).toDateString() === fd.toDateString()); }
+                if (filterType.value) f = f.filter(r => r.meetingType && r.meetingType.toLowerCase().includes(filterType.value.toLowerCase()));
+                if (filterKeyword.value) { const kw = filterKeyword.value.toLowerCase(); f = f.filter(r => (r.meetingObject&&r.meetingObject.toLowerCase().includes(kw))||(r.meetingLocation&&r.meetingLocation.toLowerCase().includes(kw))||(r.secretaryName&&r.secretaryName.toLowerCase().includes(kw))||(r.agendaItems||[]).some(a=>(a.title&&a.title.toLowerCase().includes(kw))||(a.details&&a.details.toLowerCase().includes(kw)))); }
+                f.sort((a,b) => new Date(b.meetingDate) - new Date(a.meetingDate));
+                return f;
             }
-            
-            // Formater le contenu d'un point de l'ordre du jour selon le style
-            function formatAgendaContent(details, style, index, totalItems) {
-                if (!details.trim()) return '<em>Aucun détail fourni</em>';
-                
-                const lines = details.split('\n').filter(line => line.trim());
-                
-                if (style === 'formal') {
-                    return lines.map(line => {
-                        if (line.trim().endsWith('.')) {
-                            return `<p>${line.trim()}</p>`;
-                        } else {
-                            return `<p>${line.trim()}.</p>`;
-                        }
-                    }).join('');
-                } else if (style === 'educational') {
-                    return lines.map(line => {
-                        const trimmedLine = line.trim();
-                        if (trimmedLine.length < 50) {
-                            return `<p><strong>${trimmedLine}</strong></p>`;
-                        } else {
-                            return `<p>${trimmedLine}</p>`;
-                        }
-                    }).join('');
-                } else {
-                    // Style animé
-                    let formattedContent = '';
-                    
-                    if (index === 0) {
-                        formattedContent += `<p>Pour commencer, nous avons abordé la question de "${lines[0].split(':')[0] || lines[0].substring(0, 50)}..."</p>`;
-                    } else if (index === totalItems - 1) {
-                        formattedContent += `<p>Enfin, pour clôturer notre ordre du jour, nous nous sommes penchés sur "${lines[0].split(':')[0] || lines[0].substring(0, 50)}..."</p>`;
-                    } else {
-                        formattedContent += `<p>Poursuivant nos travaux, nous avons ensuite examiné "${lines[0].split(':')[0] || lines[0].substring(0, 50)}..."</p>`;
-                    }
-                    
-                    formattedContent += lines.map(line => {
-                        const trimmedLine = line.trim();
-                        return `<p>${trimmedLine}</p>`;
-                    }).join('');
-                    
-                    return formattedContent;
-                }
-            }
-            
-            // Générer des transitions entre les points pour le style animé
-            function generateTransition(currentIndex, totalItems) {
-                const transitions = [
-                    "Forts des conclusions de ce premier point, nous avons naturellement enchaîné avec le sujet suivant.",
-                    "Sur ces bases solides, nous avons poursuivi notre examen avec le point suivant.",
-                    "Ces éléments étant actés, l'assemblée s'est tournée vers le prochain point à l'ordre du jour.",
-                    "Après cet échange nourri, la discussion s'est orientée vers le sujet suivant.",
-                    "Une fois ce point clarifié, nous avons abordé la question suivante avec une vision renouvelée.",
-                    "Ces décisions prises, nous avons poursuivi notre cheminement à travers l'ordre du jour.",
-                    "Sur cette dynamique positive, nous avons enchaîné avec le point suivant.",
-                    "Ces perspectives tracées, nous nous sommes attelés à l'examen du sujet suivant."
-                ];
-                
-                // Choisir une transition aléatoire
-                return transitions[Math.floor(Math.random() * transitions.length)];
-            }
-            
-            // Calculer la durée de la réunion
-            function calculateDuration(startDate, endDate) {
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                const diffMs = end - start;
-                const diffHrs = Math.floor(diffMs / 3600000);
-                const diffMins = Math.round((diffMs % 3600000) / 60000);
-                
-                if (diffHrs === 0) {
-                    return `${diffMins} minutes`;
-                } else if (diffMins === 0) {
-                    return `${diffHrs} heure${diffHrs > 1 ? 's' : ''}`;
-                } else {
-                    return `${diffHrs} heure${diffHrs > 1 ? 's' : ''} et ${diffMins} minute${diffMins > 1 ? 's' : ''}`;
-                }
-            }
-            
-            // Sauvegarder le rapport
-            saveReportBtn.addEventListener('click', function() {
-                const reportData = generatedReport.dataset.reportData;
-                
-                if (!reportData) {
-                    alert('Veuillez d\'abord générer un rapport avant de le sauvegarder.');
+
+            function renderSaved() {
+                const f = getFiltered();
+                if (!f.length) {
+                    list.innerHTML = `<div class="empty-state"><div class="icon"><i class="fas fa-inbox"></i></div><h3>Aucun rapport</h3><p>Les rapports sauvegardés apparaîtront ici.</p></div>`;
                     return;
                 }
-                
-                const parsedData = JSON.parse(reportData);
-                
-                // Vérifier si le rapport existe déjà
-                const existingIndex = savedReports.findIndex(report => report.id === parsedData.id);
-                
-                if (existingIndex !== -1) {
-                    // Mettre à jour le rapport existant
-                    savedReports[existingIndex] = parsedData;
-                } else {
-                    // Ajouter le nouveau rapport
-                    savedReports.push(parsedData);
-                }
-                
-                // Sauvegarder dans le localStorage
-                localStorage.setItem('savedReports', JSON.stringify(savedReports));
-                
-                // Mettre à jour l'affichage
-                displaySavedReports();
-                
-                alert('Rapport sauvegardé avec succès !');
+                list.innerHTML = f.map(r => {
+                    const sd = new Date(r.meetingDate);
+                    return `<div class="report-item">
+                        <div class="report-item-info">
+                            <div class="report-item-title">${r.meetingObject || 'Sans titre'}</div>
+                            <div class="report-item-meta">${r.meetingType} • ${sd.toLocaleDateString('fr-FR',{weekday:'short',year:'numeric',month:'short',day:'numeric'})} • ${r.meetingLocation||''}</div>
+                            <div class="report-item-meta">${getStyle(r.writingStyle)} • ${r.secretaryName||''}</div>
+                        </div>
+                        <div class="report-item-actions">
+                            <button class="btn btn-ghost btn-sm view-r" data-id="${r.id}"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-primary btn-sm load-r" data-id="${r.id}"><i class="fas fa-download"></i></button>
+                            <button class="btn btn-danger btn-sm del-r" data-id="${r.id}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`;
+                }).join('');
+                list.querySelectorAll('.view-r').forEach(b => b.addEventListener('click', () => viewReport(+b.dataset.id)));
+                list.querySelectorAll('.load-r').forEach(b => b.addEventListener('click', () => loadReport(+b.dataset.id)));
+                list.querySelectorAll('.del-r').forEach(b => b.addEventListener('click', () => deleteReport(+b.dataset.id)));
+            }
+
+            function getStyle(s) { return s === 'formal' ? 'Formel' : s === 'educational' ? 'Pédagogique' : s === 'dynamic' ? 'Animé' : '—'; }
+
+            function viewReport(id) {
+                const r = savedReports.find(x => x.id === id);
+                if (!r) return;
+                const sd = new Date(r.meetingDate), ed = r.meetingEndDate ? new Date(r.meetingEndDate) : sd;
+                const opt = { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' };
+                const html = generateReportContent(r.meetingType, r.meetingObject, sd.toLocaleDateString('fr-FR',opt), ed.toLocaleDateString('fr-FR',opt), r.meetingLocation, r.secretaryName, r.agendaItems, r.writingStyle, sd, ed);
+                const w = window.open('', '_blank');
+                w.document.write(`<!DOCTYPE html><html><head><title>Rapport ${r.meetingType}</title>
+                <style>body{font-family:Inter,sans-serif;line-height:1.6;padding:24px;max-width:900px;margin:0 auto;color:#333;}
+                .report-header{text-align:center;margin-bottom:28px;border-bottom:2px solid #2c3e50;padding-bottom:18px;}
+                .report-title{color:#2c3e50;font-size:1.7rem;margin-bottom:8px;}
+                .report-meta{color:#666;font-style:italic;}
+                .report-section{margin-bottom:22px;}
+                h2{color:#2c3e50;border-bottom:2px solid #ecf0f1;padding-bottom:8px;font-size:1.3rem;}
+                .agenda-point{margin-bottom:12px;}
+                .agenda-point-title{font-weight:600;color:#2c3e50;}
+                .agenda-point-content{margin-left:18px;color:#555;}
+                .signature-section{margin-top:36px;text-align:right;}
+                .signature-line{width:280px;border-bottom:1px solid #333;margin:36px auto 5px;display:inline-block;}
+                .discourse-flow{background:#e8f4fc;border-left:4px solid #3498db;padding:14px 18px;margin:16px 0;border-radius:0 10px 10px 0;}
+                .transition-phrase{font-style:italic;color:#3498db;margin:10px 0;font-weight:500;}
+                @media print{body{padding:0;}}
+</style></head><body>${html}</body></html>`);
+                w.document.close();
+            }
+
+            function loadReport(id) {
+                const r = savedReports.find(x => x.id === id);
+                if (!r) return;
+                $('meetingType').value = r.meetingType;
+                $('meetingObject').value = r.meetingObject || '';
+                $('meetingDate').value = r.meetingDate ? r.meetingDate.slice(0,16) : '';
+                $('meetingEndDate').value = r.meetingEndDate ? r.meetingEndDate.slice(0,16) : '';
+                $('meetingLocation').value = r.meetingLocation || '';
+                $('secretaryName').value = r.secretaryName || '';
+                const radio = document.querySelector(`input[name="writingStyle"][value="${r.writingStyle}"]`);
+                if (radio) radio.checked = true;
+                agendaContainer.innerHTML = '';
+                agendaCount = 0;
+                (r.agendaItems || []).forEach(a => addAgendaItem(a.title, a.details));
+                currentId = r.id;
+                document.querySelector('.form-section').scrollIntoView({ behavior:'smooth' });
+                notify('Rapport chargé dans le formulaire', 'success');
+            }
+
+            function deleteReport(id) {
+                if (!confirm('Supprimer ce rapport ?')) return;
+                savedReports = savedReports.filter(x => x.id !== id);
+                try { localStorage.setItem('rapportPro_reports', JSON.stringify(savedReports)); } catch(e) {}
+                renderSaved();
+                if (currentId === id) currentId = null;
+                notify('Rapport supprimé', 'info');
+            }
+
+            filterDate.addEventListener('change', renderSaved);
+            filterType.addEventListener('change', renderSaved);
+            filterKeyword.addEventListener('input', renderSaved);
+            $('clearFilters').addEventListener('click', () => { filterDate.value=''; filterType.value=''; filterKeyword.value=''; renderSaved(); });
+
+            // ===== RESET DB =====
+            $('resetReportsDB').addEventListener('click', () => $('reset-db-modal').style.display = 'flex');
+            $('cancel-reset-db').addEventListener('click', () => $('reset-db-modal').style.display = 'none');
+            $('confirm-reset-db').addEventListener('click', () => {
+                try { localStorage.removeItem('rapportPro_reports'); } catch(e) {}
+                savedReports = [];
+                renderSaved();
+                $('reset-db-modal').style.display = 'none';
+                notify('Base réinitialisée !', 'success');
             });
-            
-            // Afficher les rapports sauvegardés
-            function displaySavedReports() {
-                let filteredReports = [...savedReports];
-                
-                // Appliquer les filtres
-                if (filterDate.value) {
-                    const filterDateObj = new Date(filterDate.value);
-                    filteredReports = filteredReports.filter(report => {
-                        const reportDate = new Date(report.meetingDate);
-                        return reportDate.toDateString() === filterDateObj.toDateString();
-                    });
-                }
-                
-                if (filterType.value) {
-                    filteredReports = filteredReports.filter(report => report.meetingType === filterType.value);
-                }
-                
-                if (filterKeyword.value) {
-                    const keyword = filterKeyword.value.toLowerCase();
-                    filteredReports = filteredReports.filter(report => 
-                        report.meetingObject.toLowerCase().includes(keyword) ||
-                        report.meetingLocation.toLowerCase().includes(keyword) ||
-                        report.secretaryName.toLowerCase().includes(keyword) ||
-                        report.agendaItems.some(item => 
-                            item.title.toLowerCase().includes(keyword) || 
-                            item.details.toLowerCase().includes(keyword)
-                        )
-                    );
-                }
-                
-                // Trier par date (du plus récent au plus ancien)
-                filteredReports.sort((a, b) => new Date(b.meetingDate) - new Date(a.meetingDate));
-                
-                // Afficher les rapports
-                if (filteredReports.length === 0) {
-                    savedReportsList.innerHTML = `
-                        <div class="empty-state">
-                            <div>📋</div>
-                            <h3>Aucun rapport trouvé</h3>
-                            <p>Les rapports sauvegardés apparaîtront ici.</p>
-                        </div>
-                    `;
-                } else {
-                    savedReportsList.innerHTML = filteredReports.map(report => {
-                        const startDate = new Date(report.meetingDate);
-                        const formattedDate = startDate.toLocaleDateString('fr-FR', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        });
-                        
-                        return `
-                            <div class="report-item">
-                                <div class="report-item-info">
-                                    <div class="report-item-title">${report.meetingObject}</div>
-                                    <div class="report-item-meta">
-                                        ${report.meetingType} • ${formattedDate} • ${report.meetingLocation} • ${report.secretaryName}
-                                    </div>
-                                    <div class="report-item-meta">
-                                        Style: ${getWritingStyleLabel(report.writingStyle)}
-                                    </div>
-                                </div>
-                                <div class="report-item-actions">
-                                    <button class="btn btn-secondary view-report" data-id="${report.id}">Voir</button>
-                                    <button class="btn btn-primary load-report" data-id="${report.id}">Charger</button>
-                                    <button class="btn btn-danger delete-report" data-id="${report.id}">Supprimer</button>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                    
-                    // Ajouter les événements aux boutons
-                    document.querySelectorAll('.view-report').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const reportId = parseInt(this.dataset.id);
-                            viewReport(reportId);
-                        });
-                    });
-                    
-                    document.querySelectorAll('.load-report').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const reportId = parseInt(this.dataset.id);
-                            loadReport(reportId);
-                        });
-                    });
-                    
-                    document.querySelectorAll('.delete-report').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const reportId = parseInt(this.dataset.id);
-                            deleteReport(reportId);
-                        });
-                    });
-                }
-            }
-            
-            // Obtenir le libellé du style de rédaction
-            function getWritingStyleLabel(style) {
-                switch(style) {
-                    case 'formal': return 'Formel';
-                    case 'educational': return 'Pédagogique';
-                    case 'dynamic': return 'Discours animé';
-                    default: return 'Non spécifié';
-                }
-            }
-            
-            // Visualiser un rapport sauvegardé
-            function viewReport(reportId) {
-                const report = savedReports.find(r => r.id === reportId);
-                if (!report) return;
-                
-                // Formater les dates
-                const startDate = new Date(report.meetingDate);
-                const endDate = new Date(report.meetingEndDate);
-                
-                const options = { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                };
-                
-                const formattedStartDate = startDate.toLocaleDateString('fr-FR', options);
-                const formattedEndDate = endDate.toLocaleDateString('fr-FR', options);
-                
-                // Générer le HTML du rapport
-                const reportHTML = generateReportContent(
-                    report.meetingType,
-                    report.meetingObject,
-                    formattedStartDate,
-                    formattedEndDate,
-                    report.meetingLocation,
-                    report.secretaryName,
-                    report.agendaItems,
-                    report.writingStyle
-                );
-                
-                // Afficher le rapport dans une nouvelle fenêtre
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Rapport de ${report.meetingType}</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
-                            .report-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #2c3e50; padding-bottom: 20px; }
-                            .report-title { color: #2c3e50; font-size: 1.8rem; margin-bottom: 10px; }
-                            .report-meta { color: #666; font-style: italic; }
-                            .report-section { margin-bottom: 25px; }
-                            .agenda-point { margin-bottom: 15px; }
-                            .agenda-point-title { font-weight: 600; margin-bottom: 8px; color: #2c3e50; }
-                            .agenda-point-content { margin-left: 20px; color: #555; }
-                            .signature-section { margin-top: 40px; text-align: right; }
-                            .signature-line { width: 300px; border-bottom: 1px solid #333; margin: 40px auto 5px; display: inline-block; }
-                            .signature-label { font-style: italic; color: #666; }
-                            .discourse-flow { background-color: #e8f4fc; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; }
-                            .transition-phrase { font-style: italic; color: #3498db; margin: 10px 0; font-weight: 500; }
-                        </style>
-                    </head>
-                    <body>
-                        ${reportHTML}
-                    </body>
-                    </html>
-                `);
-                printWindow.document.close();
-            }
-            
-            // Charger un rapport sauvegardé dans le formulaire
-            function loadReport(reportId) {
-                const report = savedReports.find(r => r.id === reportId);
-                if (!report) return;
-                
-                // Remplir le formulaire avec les données du rapport
-                document.getElementById('meetingType').value = report.meetingType;
-                document.getElementById('meetingObject').value = report.meetingObject;
-                document.getElementById('meetingDate').value = report.meetingDate.slice(0, 16);
-                document.getElementById('meetingEndDate').value = report.meetingEndDate.slice(0, 16);
-                document.getElementById('meetingLocation').value = report.meetingLocation;
-                document.getElementById('secretaryName').value = report.secretaryName;
-                
-                // Sélectionner le style de rédaction
-                document.querySelector(`input[name="writingStyle"][value="${report.writingStyle}"]`).checked = true;
-                
-                // Vider les points d'ordre du jour existants
-                agendaItemsContainer.innerHTML = '';
-                agendaItemCount = 0;
-                
-                // Ajouter les points d'ordre du jour
-                report.agendaItems.forEach(item => {
-                    agendaItemCount++;
-                    const agendaItem = document.createElement('div');
-                    agendaItem.className = 'agenda-item';
-                    agendaItem.innerHTML = `
-                        <div class="agenda-item-header">
-                            <span class="agenda-item-title">Point ${agendaItemCount}</span>
-                            <button type="button" class="remove-item">Supprimer</button>
-                        </div>
-                        <div class="form-group">
-                            <label for="agendaTitle${agendaItemCount}">Titre du point</label>
-                            <input type="text" id="agendaTitle${agendaItemCount}" value="${item.title}">
-                        </div>
-                        <div class="form-group">
-                            <label for="agendaDetails${agendaItemCount}">Grandes lignes / Détails</label>
-                            <textarea id="agendaDetails${agendaItemCount}">${item.details}</textarea>
-                        </div>
-                    `;
-                    
-                    agendaItemsContainer.appendChild(agendaItem);
-                    
-                    // Ajouter l'événement de suppression
-                    const removeBtn = agendaItem.querySelector('.remove-item');
-                    removeBtn.addEventListener('click', function() {
-                        agendaItemsContainer.removeChild(agendaItem);
-                        updateAgendaItemNumbers();
-                    });
+            $('reset-db-modal').addEventListener('click', function(e) { if (e.target === this) this.style.display = 'none'; });
+
+            // ===== PROJECTION =====
+            let pSlides = [], pCur = 0, pAuto = null, pActive = false;
+
+            function buildSlides(html, data) {
+                const slides = [];
+                slides.push({ type:'title', title:`Rapport de ${data.meetingType}`, subtitle:data.meetingObject, meta:`${data.meetingLocation} | ${new Date(data.meetingDate).toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})} | ${data.secretaryName}` });
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                tmp.querySelectorAll('.report-section').forEach(sec => {
+                    const h2 = sec.querySelector('h2');
+                    const title = h2 ? h2.textContent : 'Section';
+                    let body = sec.innerHTML;
+                    if (h2) body = body.replace(h2.outerHTML, '');
+                    slides.push({ type:'section', title, body });
                 });
-                
-                // Stocker l'ID du rapport actuel
-                currentReportId = reportId;
-                
-                // Faire défiler vers le formulaire
-                document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
-                
-                alert('Rapport chargé avec succès ! Vous pouvez maintenant le modifier et le regénérer.');
+                const sig = tmp.querySelector('.signature-section');
+                if (sig) slides.push({ type:'section', title:'Signature', body:sig.innerHTML });
+                return slides;
             }
-            
-            // Supprimer un rapport sauvegardé
-            function deleteReport(reportId) {
-                if (confirm('Êtes-vous sûr de vouloir supprimer ce rapport ? Cette action est irréversible.')) {
-                    savedReports = savedReports.filter(report => report.id !== reportId);
-                    localStorage.setItem('savedReports', JSON.stringify(savedReports));
-                    displaySavedReports();
-                    
-                    if (currentReportId === reportId) {
-                        currentReportId = null;
-                    }
+
+            function renderSlide(slide) {
+                const el = $('proj-slide');
+                if (!slide) return;
+                if (slide.type === 'title') {
+                    el.innerHTML = `<div class="slide-title-slide"><h1>${slide.title}</h1><div class="subtitle">${slide.subtitle}</div><p style="margin-top:28px;color:#7f8c8d;">${slide.meta}</p></div>`;
+                } else {
+                    el.innerHTML = `<h2>${slide.title}</h2><div class="content-block">${slide.body}</div>`;
+                }
+                el.classList.remove('active');
+                setTimeout(() => el.classList.add('active'), 50);
+                $('proj-counter').textContent = `${pCur+1} / ${pSlides.length}`;
+            }
+
+            function projNext() { if (pCur < pSlides.length - 1) { pCur++; renderSlide(pSlides[pCur]); } }
+            function projPrev() { if (pCur > 0) { pCur--; renderSlide(pSlides[pCur]); } }
+
+            function toggleAuto() {
+                if (pAuto) { clearInterval(pAuto); pAuto = null; $('proj-autoplay').innerHTML = '<i class="fas fa-play"></i> Auto'; }
+                else {
+                    pAuto = setInterval(() => { if (pCur >= pSlides.length - 1) { clearInterval(pAuto); pAuto = null; $('proj-autoplay').innerHTML = '<i class="fas fa-play"></i> Auto'; return; } projNext(); }, 10000);
+                    $('proj-autoplay').innerHTML = '<i class="fas fa-pause"></i> Stop';
                 }
             }
-            
-            // Événements pour les filtres
-            filterDate.addEventListener('change', displaySavedReports);
-            filterType.addEventListener('change', displaySavedReports);
-            filterKeyword.addEventListener('input', displaySavedReports);
-            
-            // Réinitialiser le formulaire
-            resetFormBtn.addEventListener('click', function() {
-                if (confirm('Êtes-vous sûr de vouloir réinitialiser le formulaire ? Toutes les données saisies seront perdues.')) {
-                    document.getElementById('meetingType').value = 'Conseil';
-                    document.getElementById('meetingObject').value = '';
-                    document.getElementById('meetingDate').value = '';
-                    document.getElementById('meetingEndDate').value = '';
-                    document.getElementById('meetingLocation').value = '';
-                    document.getElementById('secretaryName').value = '';
-                    document.querySelector('input[name="writingStyle"][value="formal"]').checked = true;
-                    agendaItemsContainer.innerHTML = '';
-                    agendaItemCount = 0;
-                    reportSection.classList.add('hidden');
-                    currentReportId = null;
-                    
-                    // Ajouter un premier point à l'ordre du jour
-                    addAgendaItemBtn.click();
+
+            function openProj() {
+                const ds = generatedReport.dataset.data;
+                if (!ds) { notify('Générez d\'abord un rapport', 'error'); return; }
+                const data = JSON.parse(ds);
+                pSlides = buildSlides(generatedReport.innerHTML, data);
+                if (!pSlides.length) return;
+                pCur = 0;
+                $('proj-overlay').classList.add('active');
+                document.body.style.overflow = 'hidden';
+                pActive = true;
+                renderSlide(pSlides[0]);
+            }
+
+            function closeProj() { if (pAuto) { clearInterval(pAuto); pAuto = null; } $('proj-overlay').classList.remove('active'); document.body.style.overflow = ''; pActive = false; }
+
+            $('projectReport').addEventListener('click', function() {
+                generateBtn.click();
+                setTimeout(openProj, 600);
+            });
+            $('projectGeneratedReport').addEventListener('click', openProj);
+            $('proj-close').addEventListener('click', closeProj);
+            $('proj-next').addEventListener('click', projNext);
+            $('proj-prev').addEventListener('click', projPrev);
+            $('proj-autoplay').addEventListener('click', toggleAuto);
+            $('proj-fullscreen').addEventListener('click', function() {
+                if (document.fullscreenElement) { document.exitFullscreen(); this.innerHTML = '<i class="fas fa-expand"></i> Plein écran'; }
+                else { $('proj-overlay').requestFullscreen().catch(()=>{}); this.innerHTML = '<i class="fas fa-compress"></i> Quitter'; }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (!pActive) return;
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); projNext(); }
+                else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); projPrev(); }
+                else if (e.key === 'Escape') { closeProj(); }
+                else if (e.key === 'f' || e.key === 'F') { $('proj-fullscreen').click(); }
+                else if (e.key === 'p' || e.key === 'P') { toggleAuto(); }
+            });
+
+            $('proj-overlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    const rect = this.querySelector('.proj-area').getBoundingClientRect();
+                    if (e.clientX > rect.left + rect.width * 0.7) projNext();
+                    else if (e.clientX < rect.left + rect.width * 0.3) projPrev();
                 }
             });
-            
-            // Imprimer le rapport
-            printReportBtn.addEventListener('click', function() {
-                window.print();
+
+            window.addEventListener('fullscreenchange', function() {
+                const btn = $('proj-fullscreen');
+                if (btn) btn.innerHTML = document.fullscreenElement ? '<i class="fas fa-compress"></i> Quitter' : '<i class="fas fa-expand"></i> Plein écran';
             });
-            
-            // Modifier les informations
-            editReportBtn.addEventListener('click', function() {
-                reportSection.classList.add('hidden');
-                document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
-            });
-            
-            // Ajouter un premier point à l'ordre du jour au chargement
-            addAgendaItemBtn.click();
+
+            // ===== INIT =====
+            renderSaved();
+            loadDraft();
+            if (agendaContainer.children.length === 0) addAgendaItem();
         });
     </script>
 </body>
